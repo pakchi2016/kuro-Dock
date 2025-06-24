@@ -1,0 +1,188 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Threading.Tasks; // Taskを使うため
+using System; // Stackを使うため
+using System.Collections.Generic; // Stackを使うため
+
+
+namespace Kuro_Dock.ViewModels
+{
+
+    public partial class TabViewModel : ObservableObject
+    {
+        // --- 履歴管理 ---
+        private readonly Stack<string> _backHistory = new();
+        private readonly Stack<string> _forwardHistory = new();
+
+        // --- プロパティ ---
+        [ObservableProperty]
+        private string? header; // タブのタイトル
+
+        [ObservableProperty]
+        private string? currentPath;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(GoUpCommand))]
+        [NotifyCanExecuteChangedFor(nameof(NavigateBackCommand))]
+        [NotifyCanExecuteChangedFor(nameof(NavigateForwardCommand))]
+        private DirectoryItemViewModel? selectedDirectory;
+
+        public ObservableCollection<DirectoryItemViewModel> RootDirectories { get; } = new();
+        public ObservableCollection<object> DisplayedItems { get; } = new();
+
+        // --- コンストラクタ ---
+        public TabViewModel()
+        {
+            Header = "PC";
+            LoadRootDirectories();
+            LoadDisplayedItems(); // 初期位置として最初の有効なドライブを選択
+        }
+
+        // --- メソッド ---
+        partial void OnSelectedDirectoryChanged(DirectoryItemViewModel? value)
+        {
+            CurrentPath = value?.FullPath;
+            Header = value?.Name ?? "新しいタブ";
+            LoadDisplayedItems();
+        }
+
+        public void NavigateTo(string? path, bool isNewAction)
+        {
+            if (path is null || !Directory.Exists(path)) return;
+
+            if (isNewAction && SelectedDirectory?.FullPath is not null)
+            {
+                if (SelectedDirectory.FullPath != path) // 同じ場所への移動は履歴に追加しない
+                {
+                    _backHistory.Push(SelectedDirectory.FullPath);
+                    _forwardHistory.Clear();
+                }
+            }
+
+            SelectedDirectory = new DirectoryItemViewModel { Name = Path.GetFileName(path), FullPath = path };
+            if (string.IsNullOrEmpty(SelectedDirectory.Name)) SelectedDirectory.Name = SelectedDirectory.FullPath; // ドライブのルートの場合
+        }
+
+        private void LoadRootDirectories()
+        {
+            RootDirectories.Clear();
+            var drives = DriveInfo.GetDrives();
+            foreach (var drive in drives)
+            {
+                if (drive.IsReady)
+                {
+                    var driveVm = new DirectoryItemViewModel
+                    {
+                        Name = drive.Name,
+                        FullPath = drive.RootDirectory.FullName
+                    };
+                    driveVm.Initialize();
+                    RootDirectories.Add(driveVm);
+                }
+            }
+        }
+        private void LoadDisplayedItems()
+        {
+            DisplayedItems.Clear();
+
+            if (SelectedDirectory is null)
+            {
+                foreach (var drive in RootDirectories)
+                {
+                    DisplayedItems.Add(drive);
+                }
+                return; // ここで処理を終了
+            }
+
+            if (SelectedDirectory.FullPath is null) return;
+
+            try
+            {
+                foreach (var dir in Directory.GetDirectories(SelectedDirectory.FullPath))
+                {
+                    var dirInfo = new DirectoryInfo(dir);
+                    DisplayedItems.Add(new DirectoryItemViewModel
+                    {
+                        Name = dirInfo.Name,
+                        FullPath = dirInfo.FullName,
+                        ItemType = "ファイル フォルダー",
+                        LastWriteTime = dirInfo.LastWriteTime
+                    });
+                }
+
+                foreach (var file in Directory.GetFiles(SelectedDirectory.FullPath))
+                {
+                    var fileInfo = new FileInfo(file);
+                    DisplayedItems.Add(new FileItemViewModel
+                    {
+                        Name = fileInfo.Name,
+                        FullPath = fileInfo.FullName,
+                        ItemType = "ファイル",
+                        Size = fileInfo.Length,
+                        LastWriteTime = fileInfo.LastWriteTime
+                    });
+                }
+            }
+            catch (UnauthorizedAccessException) { /* ... */ }
+        }
+
+        // --- コマンド ---
+        [RelayCommand]
+        private void OpenItem(object? item)
+        {
+            if (item is DirectoryItemViewModel dir)
+            {
+                NavigateTo(dir.FullPath, true); // ★新しいナビゲーションとして処理
+            }
+            else if (item is FileItemViewModel file && file.FullPath is not null)
+            {
+                try
+                {
+                    var psi = new System.Diagnostics.ProcessStartInfo(file.FullPath) { UseShellExecute = true };
+                    System.Diagnostics.Process.Start(psi);
+                }
+                catch (System.Exception ex) { System.Diagnostics.Debug.WriteLine($"Error: {ex.Message}"); }
+            }
+        }
+
+        [RelayCommand]
+        private void NavigateToPath() => NavigateTo(CurrentPath, true);
+
+        [RelayCommand]
+        private void Refresh() => LoadDisplayedItems();
+
+        [RelayCommand(CanExecute = nameof(CanGoUp))]
+        private void GoUp() => NavigateTo(Directory.GetParent(SelectedDirectory!.FullPath!)?.FullName, true);
+        private bool CanGoUp() => SelectedDirectory?.FullPath is not null && Directory.GetParent(SelectedDirectory.FullPath) is not null;
+
+        [RelayCommand(CanExecute = nameof(CanNavigateBack))]
+        private void NavigateBack()
+        {
+            if (_backHistory.TryPop(out var path))
+            {
+                if (SelectedDirectory?.FullPath is not null)
+                {
+                    _forwardHistory.Push(SelectedDirectory.FullPath);
+                }
+                NavigateTo(path, false); // ★履歴からのナビゲーションとして処理
+            }
+        }
+        private bool CanNavigateBack() => _backHistory.Count > 0;
+
+        [RelayCommand(CanExecute = nameof(CanNavigateForward))]
+        private void NavigateForward()
+        {
+            if (_forwardHistory.TryPop(out var path))
+            {
+                if (SelectedDirectory?.FullPath is not null)
+                {
+                    _backHistory.Push(SelectedDirectory.FullPath);
+                }
+                NavigateTo(path, false); // ★履歴からのナビゲーションとして処理
+            }
+        }
+        private bool CanNavigateForward() => _forwardHistory.Count > 0;
+    }
+}
