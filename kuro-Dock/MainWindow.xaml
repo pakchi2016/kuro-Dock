@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:Kuro_Dock"
         xmlns:views_foldertree="clr-namespace:Kuro_Dock.Features.FolderTree"
         xmlns:views_filelist="clr-namespace:Kuro_Dock.Features.FileList"
+        xmlns:views_addressbar="clr-namespace:Kuro_Dock.Features.AddressBar"
         xmlns:vm="clr-namespace:Kuro_Dock.ViewModels"
         mc:Ignorable="d"
         Title="Kuro-Dock [Imperial]" Height="600" Width="900">
@@ -14,17 +15,27 @@
     </Window.DataContext>
 
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300" MinWidth="150" />
-            <ColumnDefinition Width="5" />
-            <ColumnDefinition Width="*" MinWidth="300" />
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <!-- ★上部ペイン：アドレスバー公国 -->
+            <RowDefinition Height="*" />
+            <!-- ★中央ペイン：主要な領地 -->
+        </Grid.RowDefinitions>
 
-        <views_foldertree:FolderTreeView Grid.Column="0" DataContext="{Binding FolderTree}" />
+        <!-- アドレスバー公国を、帝国の最上段に配置します -->
+        <views_addressbar:AddressBarView Grid.Row="0" DataContext="{Binding AddressBar}" />
 
-        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
+        <!-- 主要な領地を、中央ペインに配置します -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" MinWidth="150" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="*" MinWidth="300" />
+            </Grid.ColumnDefinitions>
 
-        <views_filelist:FileListView Grid.Column="2" DataContext="{Binding FileList}" />
-
+            <views_foldertree:FolderTreeView Grid.Column="0" DataContext="{Binding FolderTree}" />
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
+            <views_filelist:FileListView Grid.Column="2" DataContext="{Binding FileList}" />
+        </Grid>
     </Grid>
 </Window>

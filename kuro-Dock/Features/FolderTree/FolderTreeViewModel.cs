@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Kuro_Dock.Core.Services;
 using Kuro_Dock.Core.Models;
+using System.Linq;
 
 namespace Kuro_Dock.Features.FolderTree
 {
@@ -27,6 +28,18 @@ namespace Kuro_Dock.Features.FolderTree
             {
                 RootDirectories.Add(new DirectoryItemViewModel(model, _directoryService));
             }
+        }
+
+        // ★★★ 宰相からの勅命で、指定の場所へ移動する権能を追加 ★★★
+        public void NavigateTo(string path)
+        {
+            // Note: This is a simplified navigation. A more robust solution
+            // would involve expanding the tree to the specified path.
+            // For now, we just set the selection.
+            this.SelectedItem = new DirectoryItemViewModel(
+                new DirectoryItem { FullPath = path, Name = System.IO.Path.GetFileName(path) },
+                _directoryService
+            );
         }
     }
 }

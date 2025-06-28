@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 D:\dev\projects\kuro-Dock\kuro-Dock\App.xaml
-3-334784628
+4612597065
 
-13673699477
+15-1861104240
 202-2136310609
-Features\FileList\FileListView.xaml;Features\FolderTree\FolderTreeView.xaml;MainWindow.xaml;
+Features\AddressBar\AddressBarView.xaml;Features\FileList\FileListView.xaml;Features\FolderTree\FolderTreeView.xaml;MainWindow.xaml;
 
 False
 

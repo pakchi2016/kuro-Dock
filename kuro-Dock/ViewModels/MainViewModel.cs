@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Kuro_Dock.Core.Models;
+using Kuro_Dock.Features.AddressBar;
 using Kuro_Dock.Features.FileList;
 using Kuro_Dock.Features.FolderTree;
 using System.ComponentModel;
@@ -11,15 +12,19 @@ namespace Kuro_Dock.ViewModels
     {
         public FolderTreeViewModel FolderTree { get; }
         public FileListViewModel FileList { get; }
+        public AddressBarViewModel AddressBar { get; } // ★アドレスバー公国の統治者を任命
 
         public MainViewModel()
         {
+            // 各公国の統治者を任命します
             FolderTree = new FolderTreeViewModel();
             FileList = new FileListViewModel();
+            AddressBar = new AddressBarViewModel();
 
             // 各公国からの報告ルートを確立します
             FolderTree.PropertyChanged += FolderTree_PropertyChanged;
             FileList.DirectoryNavigationRequested += FileList_DirectoryNavigationRequested;
+            AddressBar.NavigationRequested += AddressBar_NavigationRequested; // ★新しい外交ルートを確立
         }
 
         // フォルダツリーからの報告（領主交代）を受けた時の処理
@@ -27,19 +32,27 @@ namespace Kuro_Dock.ViewModels
         {
             if (e.PropertyName == nameof(FolderTreeViewModel.SelectedItem))
             {
-                await FileList.LoadItemsAsync(FolderTree.SelectedItem?.FullPath);
+                var path = FolderTree.SelectedItem?.FullPath;
+                // ファイル一覧とアドレスバーの両方に、新しい領主の土地を通知します
+                await FileList.LoadItemsAsync(path);
+                AddressBar.CurrentPath = path;
             }
         }
 
-        // ★★★ ファイル一覧からの報告（移動要請）を受けた時の処理を追加 ★★★
+        // ファイル一覧からの報告（移動要請）を受けた時の処理
         private void FileList_DirectoryNavigationRequested(string path)
         {
-            // 宰相が、フォルダツリー公国に「この地の者を、新しい領主に任命せよ」と勅命を下します。
-            // これにより、FolderTree_PropertyChangedが連鎖的に呼ばれ、全てが更新されます。
-            FolderTree.SelectedItem = new DirectoryItemViewModel(
-                new DirectoryItem { FullPath = path, Name = Path.GetFileName(path) },
-                new Core.Services.DirectoryService() // Serviceを渡します
-            );
+            FolderTree.NavigateTo(path);
+        }
+
+        // ★★★ アドレスバーからの報告（転移要請）を受けた時の処理を追加 ★★★
+        private void AddressBar_NavigationRequested(string path)
+        {
+            if (Directory.Exists(path))
+            {
+                // 宰相が、フォルダツリー公国とファイル一覧公国の両方に、転移を命じます
+                FolderTree.NavigateTo(path);
+            }
         }
     }
 }
