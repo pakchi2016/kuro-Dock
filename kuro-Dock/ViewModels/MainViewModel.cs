@@ -1,92 +1,45 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging; 
-using System.Collections.ObjectModel;
-using Kuro_Dock.Services; 
-using Kuro_Dock.Models;
+using Kuro_Dock.Core.Models;
+using Kuro_Dock.Features.FileList;
+using Kuro_Dock.Features.FolderTree;
+using System.ComponentModel;
 using System.IO;
 
 namespace Kuro_Dock.ViewModels
 {
-    // ここに IRecipient<DirectorySelectedMessage> を再度追加！
-    public partial class MainViewModel : ObservableObject, IRecipient<DirectorySelectedMessage>
+    public partial class MainViewModel : ObservableObject
     {
-        public string WindowTitle { get; } = "Kuro-Dock by わらわ";
-
-        public ObservableCollection<TabViewModel> Tabs { get; } = new();
-
-        [ObservableProperty]
-        private TabViewModel? selectedTab;
-
-        private readonly BookmarkService _bookmarkService;
-        public ObservableCollection<BookmarkItem> Bookmarks { get; } = new();
+        public FolderTreeViewModel FolderTree { get; }
+        public FileListViewModel FileList { get; }
 
         public MainViewModel()
         {
-            _bookmarkService = new BookmarkService();
-            WeakReferenceMessenger.Default.Register(this);
-            LoadBookmarks();
-            AddNewTab();
+            FolderTree = new FolderTreeViewModel();
+            FileList = new FileListViewModel();
+
+            // 各公国からの報告ルートを確立します
+            FolderTree.PropertyChanged += FolderTree_PropertyChanged;
+            FileList.DirectoryNavigationRequested += FileList_DirectoryNavigationRequested;
         }
 
-        private void LoadBookmarks()
+        // フォルダツリーからの報告（領主交代）を受けた時の処理
+        private async void FolderTree_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            var bookmarks = _bookmarkService.LoadBookmarks();
-            foreach (var bookmark in bookmarks)
+            if (e.PropertyName == nameof(FolderTreeViewModel.SelectedItem))
             {
-                Bookmarks.Add(bookmark);
+                await FileList.LoadItemsAsync(FolderTree.SelectedItem?.FullPath);
             }
         }
 
-        public void Receive(DirectorySelectedMessage message)
+        // ★★★ ファイル一覧からの報告（移動要請）を受けた時の処理を追加 ★★★
+        private void FileList_DirectoryNavigationRequested(string path)
         {
-            // アクティブなタブが存在し、そのタブのSelectedDirectoryを更新する
-            if (SelectedTab is not null)
-            {
-                SelectedTab.SelectedDirectory = message.Value;
-            }
-        }
-
-        [RelayCommand]
-        private void AddNewTab()
-        {
-            var newTab = new TabViewModel();
-            Tabs.Add(newTab);
-            SelectedTab = newTab;
-        }
-
-        [RelayCommand]
-        private void CloseTab(TabViewModel? tab)
-        {
-            if (tab is not null)
-            {
-                Tabs.Remove(tab);
-            }
-        }
-
-        [RelayCommand]
-        private void AddCurrentBookmark()
-        {
-            if (SelectedTab?.CurrentPath is null) return;
-
-            var newBookmark = new BookmarkItem
-            {
-                // 現在のフォルダ名をブックマーク名にする
-                Name = SelectedTab.Header ?? Path.GetFileName(SelectedTab.CurrentPath),
-                Path = SelectedTab.CurrentPath
-            };
-
-            Bookmarks.Add(newBookmark);
-            _bookmarkService.SaveBookmarks(Bookmarks); // 忘れずに保存
-        }
-
-        [RelayCommand]
-        private void NavigateToBookmark(BookmarkItem? bookmark)
-        {
-            if (bookmark is null || SelectedTab is null) return;
-
-            // 選択中のタブに、ブックマークの場所へ移動するように命令する
-            SelectedTab.NavigateTo(bookmark.Path, true);
+            // 宰相が、フォルダツリー公国に「この地の者を、新しい領主に任命せよ」と勅命を下します。
+            // これにより、FolderTree_PropertyChangedが連鎖的に呼ばれ、全てが更新されます。
+            FolderTree.SelectedItem = new DirectoryItemViewModel(
+                new DirectoryItem { FullPath = path, Name = Path.GetFileName(path) },
+                new Core.Services.DirectoryService() // Serviceを渡します
+            );
         }
     }
 }

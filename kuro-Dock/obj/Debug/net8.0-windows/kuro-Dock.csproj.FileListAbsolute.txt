@@ -27,3 +27,8 @@ D:\dev\projects\kuro-Dock\kuro-Dock\bin\Debug\net8.0-windows\Microsoft.Win32.Sys
 D:\dev\projects\kuro-Dock\kuro-Dock\bin\Debug\net8.0-windows\System.Drawing.Common.dll
 D:\dev\projects\kuro-Dock\kuro-Dock\bin\Debug\net8.0-windows\System.Private.Windows.Core.dll
 D:\dev\projects\kuro-Dock\kuro-Dock\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\Microsoft.Win32.SystemEvents.dll
+D:\dev\projects\kuro-Dock\kuro-Dock\obj\Debug\net8.0-windows\GeneratedInternalTypeHelper.g.cs
+D:\dev\projects\kuro-Dock\kuro-Dock\obj\Debug\net8.0-windows\Features\FileList\FileListView.g.cs
+D:\dev\projects\kuro-Dock\kuro-Dock\obj\Debug\net8.0-windows\Features\FolderTree\FolderTreeView.g.cs
+D:\dev\projects\kuro-Dock\kuro-Dock\obj\Debug\net8.0-windows\Features\FileList\FileListView.baml
+D:\dev\projects\kuro-Dock\kuro-Dock\obj\Debug\net8.0-windows\Features\FolderTree\FolderTreeView.baml

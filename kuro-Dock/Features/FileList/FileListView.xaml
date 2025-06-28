@@ -1,0 +1,37 @@
+﻿<UserControl x:Class="Kuro_Dock.Features.FileList.FileListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:local="clr-namespace:Kuro_Dock.Features.FileList"
+             xmlns:models="clr-namespace:Kuro_Dock.Core.Models"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=local:FileListViewModel, IsDesignTimeCreatable=True}">
+    <Grid>
+        <ListView ItemsSource="{Binding Items}" x:Name="ItemsListView">
+            <!-- ★★★ ここに、双撃を魂に伝える魔法の回路を繋ぎます ★★★ -->
+            <b:Interaction.Triggers>
+                <b:EventTrigger EventName="MouseDoubleClick">
+                    <b:InvokeCommandAction Command="{Binding OpenItemCommand}"
+                                           CommandParameter="{Binding ElementName=ItemsListView, Path=SelectedItem}" />
+                </b:EventTrigger>
+            </b:Interaction.Triggers>
+            <!-- ★★★ ここまで ★★★ -->
+
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="名前" DisplayMemberBinding="{Binding Name}" Width="250" />
+                    <GridViewColumn Header="更新日時" DisplayMemberBinding="{Binding LastWriteTime, StringFormat='yyyy/MM/dd HH:mm'}" Width="150" />
+                    <GridViewColumn Header="種類" DisplayMemberBinding="{Binding ItemType}" Width="120" />
+                    <GridViewColumn Header="サイズ" DisplayMemberBinding="{Binding Size, StringFormat='N0'}" Width="100" />
+                </GridView>
+            </ListView.View>
+
+            <ListView.Resources>
+                <DataTemplate DataType="{x:Type models:DirectoryItem}" />
+                <DataTemplate DataType="{x:Type models:FileItem}" />
+            </ListView.Resources>
+        </ListView>
+    </Grid>
+</UserControl>

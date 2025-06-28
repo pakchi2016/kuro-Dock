@@ -1,4 +1,4 @@
-﻿kuro-Dock
+﻿Kuro-Dock
 
 
 winexe
@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 D:\dev\projects\kuro-Dock\kuro-Dock\App.xaml
-11407045341
+3-334784628
 
-121886911826
+13673699477
 202-2136310609
-MainWindow.xaml;
+Features\FileList\FileListView.xaml;Features\FolderTree\FolderTreeView.xaml;MainWindow.xaml;
 
 False
 
