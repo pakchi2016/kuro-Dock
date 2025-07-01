@@ -11,6 +11,7 @@ namespace Kuro_Dock.Features.FolderTree
     {
         private readonly DirectoryItem _model;
         private readonly DirectoryService _directoryService;
+        private bool _isLoaded = false;
 
         public string Name => _model.Name;
         public string FullPath => _model.FullPath;
@@ -26,28 +27,41 @@ namespace Kuro_Dock.Features.FolderTree
         {
             _model = model;
             _directoryService = directoryService;
-            if (_directoryService.GetSubDirectories(FullPath).Any())
-            {
-                Children.Add(new DirectoryItemViewModel());
-            }
+            Children.Add(new DirectoryItemViewModel());
         }
 
         private DirectoryItemViewModel()
         {
-            _model = new DirectoryItem { Name = null! };
-            _directoryService = new DirectoryService();
+            _model = new DirectoryItem { Name = "DUMMY" };
+            _directoryService = null!;
         }
 
+        /// <summary>
+        /// 子要素を非同期で読み込みますの。
+        /// </summary>
+        public async Task LoadChildrenAsync()
+        {
+            // 既に読み込み済み、またはダミーノードの場合は何もしませんわ
+            if (_isLoaded || _directoryService == null)
+            {
+                return;
+            }
+
+            Children.Clear(); // ダミーノードを削除
+            var subDirModels = await Task.Run(() => _directoryService.GetSubDirectories(FullPath));
+            foreach (var dirModel in subDirModels)
+            {
+                Children.Add(new DirectoryItemViewModel(dirModel, _directoryService));
+            }
+            _isLoaded = true; // 読み込み完了の印
+        }
+
+        // IsExpandedプロパティが変更されたときに、子の読み込みを実行しますわ
         async partial void OnIsExpandedChanged(bool value)
         {
-            if (value && !IsLoaded)
+            if (value)
             {
-                Children.Clear();
-                var subDirModels = await Task.Run(() => _directoryService.GetSubDirectories(FullPath));
-                foreach (var dirModel in subDirModels)
-                {
-                    Children.Add(new DirectoryItemViewModel(dirModel, _directoryService));
-                }
+                await LoadChildrenAsync();
             }
         }
     }

@@ -1,26 +1,29 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
+using CommunityToolkit.Mvvm.Messaging; // 追加
+using Kuro_Dock.Core.Models; // 追加
 
 namespace Kuro_Dock.Features.AddressBar
 {
-    /// <summary>
-    /// アドレスバーの表示と動作を管理するViewModelです。
-    /// </summary>
+
     public partial class AddressBarViewModel : ObservableObject
     {
+        private readonly IMessenger _messenger;
+
         [ObservableProperty]
         private string? currentPath;
 
-        // 宰相へ「この場所へ移動したい」と伝えるための伝令イベントです
-        public event Action<string>? NavigationRequested;
+        public AddressBarViewModel(IMessenger messenger)
+        {
+            _messenger = messenger;
+        }
 
         [RelayCommand]
         private void Navigate()
         {
             if (!string.IsNullOrEmpty(CurrentPath))
             {
-                NavigationRequested?.Invoke(CurrentPath);
+                _messenger.Send(new NavigatePathMessage(CurrentPath));
             }
         }
     }

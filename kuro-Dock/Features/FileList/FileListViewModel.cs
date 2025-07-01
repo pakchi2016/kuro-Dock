@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Kuro_Dock.Core.Models;
 using Kuro_Dock.Core.Services;
 using System;
@@ -11,16 +12,15 @@ namespace Kuro_Dock.Features.FileList
 {
     public partial class FileListViewModel : ObservableObject
     {
+        private readonly IMessenger _messenger;
         private readonly DirectoryService _directoryService;
         private readonly FileService _fileService;
 
         public ObservableCollection<object> Items { get; } = new();
-
-        // ★★★ 宰相への伝令イベントを追加 ★★★
-        public event Action<string>? DirectoryNavigationRequested;
-
-        public FileListViewModel()
+        
+        public FileListViewModel(IMessenger messenger)
         {
+            _messenger = messenger;
             _directoryService = new DirectoryService();
             _fileService = new FileService();
         }
@@ -43,18 +43,15 @@ namespace Kuro_Dock.Features.FileList
             }
         }
 
-        // ★★★ 新しい命令（コマンド）を追加 ★★★
         [RelayCommand]
         private void OpenItem(object? item)
         {
             if (item is DirectoryItem dir)
             {
-                // フォルダの場合、宰相に「この場所へ移動したい」と伝令を送ります
-                DirectoryNavigationRequested?.Invoke(dir.FullPath);
+                _messenger.Send(new NavigatePathMessage(dir.FullPath));
             }
             else if (item is FileItem file)
             {
-                // ファイルの場合、OSに開封を命じます
                 try
                 {
                     var psi = new ProcessStartInfo(file.FullPath) { UseShellExecute = true };

@@ -10,14 +10,12 @@
              d:DataContext="{d:DesignInstance Type=local:FileListViewModel, IsDesignTimeCreatable=True}">
     <Grid>
         <ListView ItemsSource="{Binding Items}" x:Name="ItemsListView">
-            <!-- ★★★ ここに、双撃を魂に伝える魔法の回路を繋ぎます ★★★ -->
             <b:Interaction.Triggers>
                 <b:EventTrigger EventName="MouseDoubleClick">
                     <b:InvokeCommandAction Command="{Binding OpenItemCommand}"
                                            CommandParameter="{Binding ElementName=ItemsListView, Path=SelectedItem}" />
                 </b:EventTrigger>
             </b:Interaction.Triggers>
-            <!-- ★★★ ここまで ★★★ -->
 
             <ListView.View>
                 <GridView>

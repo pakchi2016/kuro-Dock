@@ -1,10 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "ZhLhHC4TK6k=",
+  "dgSpecHash": "dHyscYuDe+E=",
   "success": true,
   "projectFilePath": "D:\\dev\\projects\\kuro-Dock\\kuro-Dock\\Kuro-Dock.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\pakch\\.nuget\\packages\\communitytoolkit.mvvm\\8.4.0\\communitytoolkit.mvvm.8.4.0.nupkg.sha512",
+    "C:\\Users\\pakch\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\9.0.6\\microsoft.extensions.dependencyinjection.9.0.6.nupkg.sha512",
+    "C:\\Users\\pakch\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\9.0.6\\microsoft.extensions.dependencyinjection.abstractions.9.0.6.nupkg.sha512",
     "C:\\Users\\pakch\\.nuget\\packages\\microsoft.win32.systemevents\\9.0.6\\microsoft.win32.systemevents.9.0.6.nupkg.sha512",
     "C:\\Users\\pakch\\.nuget\\packages\\microsoft.xaml.behaviors.wpf\\1.1.135\\microsoft.xaml.behaviors.wpf.1.1.135.nupkg.sha512",
     "C:\\Users\\pakch\\.nuget\\packages\\system.drawing.common\\9.0.6\\system.drawing.common.9.0.6.nupkg.sha512"

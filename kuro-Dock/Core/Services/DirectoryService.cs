@@ -5,9 +5,7 @@ using System.Linq;
 
 namespace Kuro_Dock.Core.Services
 {
-    /// <summary>
-    /// ディレクトリ（フォルダ）に関する操作を専門に担当します。
-    /// </summary>
+
     public class DirectoryService
     {
         public IEnumerable<DirectoryItem> GetRootDirectories()

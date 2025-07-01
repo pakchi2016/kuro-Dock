@@ -5,9 +5,7 @@ using System.Linq;
 
 namespace Kuro_Dock.Core.Services
 {
-    /// <summary>
-    /// ファイルに関する操作を専門に担当します。
-    /// </summary>
+
     public class FileService
     {
         public IEnumerable<FileItem> GetFiles(string parentPath)

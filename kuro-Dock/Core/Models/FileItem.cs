@@ -2,9 +2,7 @@
 
 namespace Kuro_Dock.Core.Models
 {
-    /// <summary>
-    /// ファイルに関する純粋なデータを保持します。
-    /// </summary>
+
     public class FileItem
     {
         public string Name { get; set; } = string.Empty;

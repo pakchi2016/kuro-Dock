@@ -1,8 +1,7 @@
-﻿<Application x:Class="kuro_Dock.App"
+﻿<Application x:Class="Kuro_Dock.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:kuro_Dock"
-             StartupUri="MainWindow.xaml">
+             xmlns:local="clr-namespace:Kuro_Dock">
     <Application.Resources>
          
     </Application.Resources>

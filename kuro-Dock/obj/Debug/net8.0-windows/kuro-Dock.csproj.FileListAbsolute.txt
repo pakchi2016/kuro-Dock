@@ -34,3 +34,5 @@ D:\dev\projects\kuro-Dock\kuro-Dock\obj\Debug\net8.0-windows\Features\FileList\F
 D:\dev\projects\kuro-Dock\kuro-Dock\obj\Debug\net8.0-windows\Features\FolderTree\FolderTreeView.baml
 D:\dev\projects\kuro-Dock\kuro-Dock\obj\Debug\net8.0-windows\Features\AddressBar\AddressBarView.g.cs
 D:\dev\projects\kuro-Dock\kuro-Dock\obj\Debug\net8.0-windows\Features\AddressBar\AddressBarView.baml
+D:\dev\projects\kuro-Dock\kuro-Dock\bin\Debug\net8.0-windows\Microsoft.Extensions.DependencyInjection.dll
+D:\dev\projects\kuro-Dock\kuro-Dock\bin\Debug\net8.0-windows\Microsoft.Extensions.DependencyInjection.Abstractions.dll

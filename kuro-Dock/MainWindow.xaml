@@ -10,22 +10,15 @@
         xmlns:vm="clr-namespace:Kuro_Dock.ViewModels"
         mc:Ignorable="d"
         Title="Kuro-Dock [Imperial]" Height="600" Width="900">
-    <Window.DataContext>
-        <vm:MainViewModel />
-    </Window.DataContext>
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <!-- ★上部ペイン：アドレスバー公国 -->
             <RowDefinition Height="*" />
-            <!-- ★中央ペイン：主要な領地 -->
         </Grid.RowDefinitions>
 
-        <!-- アドレスバー公国を、帝国の最上段に配置します -->
         <views_addressbar:AddressBarView Grid.Row="0" DataContext="{Binding AddressBar}" />
 
-        <!-- 主要な領地を、中央ペインに配置します -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="300" MinWidth="150" />
