@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using Kuro_Dock.Core.Models;
 using Kuro_Dock.Core.Services;
 using System;
@@ -12,17 +11,18 @@ namespace Kuro_Dock.Features.FileList
 {
     public partial class FileListViewModel : ObservableObject
     {
-        private readonly IMessenger _messenger;
         private readonly DirectoryService _directoryService;
         private readonly FileService _fileService;
 
         public ObservableCollection<object> Items { get; } = new();
-        
-        public FileListViewModel(IMessenger messenger)
+
+        // C#の標準的なイベントで、ナビゲーション要求を通知します
+        public event Action<string>? DirectoryNavigationRequested;
+
+        public FileListViewModel(DirectoryService directoryService, FileService fileService)
         {
-            _messenger = messenger;
-            _directoryService = new DirectoryService();
-            _fileService = new FileService();
+            _directoryService = directoryService;
+            _fileService = fileService;
         }
 
         public async Task LoadItemsAsync(string? path)
@@ -48,7 +48,8 @@ namespace Kuro_Dock.Features.FileList
         {
             if (item is DirectoryItem dir)
             {
-                _messenger.Send(new NavigatePathMessage(dir.FullPath));
+                // イベントを発行します
+                DirectoryNavigationRequested?.Invoke(dir.FullPath);
             }
             else if (item is FileItem file)
             {
@@ -57,10 +58,7 @@ namespace Kuro_Dock.Features.FileList
                     var psi = new ProcessStartInfo(file.FullPath) { UseShellExecute = true };
                     Process.Start(psi);
                 }
-                catch (Exception)
-                {
-                    // 開けなかった場合のエラー処理（今は何もしません）
-                }
+                catch (Exception) { /* エラー処理 */ }
             }
         }
     }

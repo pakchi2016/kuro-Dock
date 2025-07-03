@@ -1,54 +1,54 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Messaging;
-using Kuro_Dock.Core.Models;
-using Kuro_Dock.Features.AddressBar;
-using Kuro_Dock.Features.FileList;
-using Kuro_Dock.Features.FolderTree;
-using System.IO;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace Kuro_Dock.ViewModels
 {
-    // メッセージ受信のためにインターフェースを実装しますの
-    public partial class MainViewModel : ObservableObject,
-        IRecipient<SelectedPathChangedMessage>,
-        IRecipient<NavigatePathMessage>
+    public partial class MainViewModel : ObservableObject
     {
-        private readonly IMessenger _messenger;
-        public FolderTreeViewModel FolderTree { get; }
-        public FileListViewModel FileList { get; }
-        public AddressBarViewModel AddressBar { get; }
+        private readonly IServiceProvider _serviceProvider;
+        public ObservableCollection<TabViewModel> Tabs { get; } = new();
 
-        // コンストラクタで、DIコンテナから各インスタンスを受け取りますわ
-        public MainViewModel(
-            IMessenger messenger,
-            FolderTreeViewModel folderTree,
-            FileListViewModel fileList,
-            AddressBarViewModel addressBar)
+        [ObservableProperty]
+        private TabViewModel? selectedTab;
+
+        public MainViewModel(IServiceProvider serviceProvider)
         {
-            _messenger = messenger;
-            FolderTree = folderTree;
-            FileList = fileList;
-            AddressBar = addressBar;
+            // XAMLデザイナーによる誤動作を防ぐための、厳格なチェックですわ
+            bool inDesignMode = DesignerProperties.GetIsInDesignMode(new System.Windows.DependencyObject()) ||
+                                LicenseManager.UsageMode == LicenseUsageMode.Designtime;
 
-            // 自身をメッセンジャーに受信者として登録しますの
-            _messenger.RegisterAll(this);
+            if (inDesignMode) return;
+
+            // コンストラクタでは、DIコンテナを受け取るだけにとどめます
+            _serviceProvider = serviceProvider;
         }
 
-        // FolderTreeからのメッセージをここで受け取りますわ
-        public async void Receive(SelectedPathChangedMessage message)
+        /// <summary>
+        /// 最初のタブを作成する、初期化メソッドですわ。
+        /// </summary>
+        public void Initialize()
         {
-            var path = message.Value;
-            await FileList.LoadItemsAsync(path);
-            AddressBar.CurrentPath = path;
+            AddNewTab();
         }
 
-        // AddressBarやFileListからのメッセージをここで受け取りますわ
-        public async void Receive(NavigatePathMessage message)
+        [RelayCommand]
+        private void AddNewTab()
         {
-            var path = message.Value;
-            if (Directory.Exists(path))
+            var newTab = _serviceProvider.GetRequiredService<TabViewModel>();
+            Tabs.Add(newTab);
+            SelectedTab = newTab;
+        }
+
+        [RelayCommand]
+        private void CloseTab(TabViewModel? tab)
+        {
+            if (tab != null)
             {
-                await FolderTree.NavigateTo(path);
+                Tabs.Remove(tab);
             }
         }
     }

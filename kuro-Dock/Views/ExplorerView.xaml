@@ -1,0 +1,31 @@
+﻿<UserControl x:Class="Kuro_Dock.Views.ExplorerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:views_foldertree="clr-namespace:Kuro_Dock.Features.FolderTree"
+             xmlns:views_filelist="clr-namespace:Kuro_Dock.Features.FileList"
+             xmlns:views_addressbar="clr-namespace:Kuro_Dock.Features.AddressBar"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <views_addressbar:AddressBarView Grid.Row="0" DataContext="{Binding AddressBar}" />
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" MinWidth="150" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="*" MinWidth="300" />
+            </Grid.ColumnDefinitions>
+
+            <views_foldertree:FolderTreeView Grid.Column="0" DataContext="{Binding FolderTree}" />
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
+            <views_filelist:FileListView Grid.Column="2" DataContext="{Binding FileList}" />
+        </Grid>
+    </Grid>
+</UserControl>

@@ -3,18 +3,39 @@
 namespace Kuro_Dock.Core.Models
 {
     /// <summary>
+    /// どのViewModelから送信されたかを示すための基底クラスですわ
+    /// </summary>
+    public abstract class ViewModelMessage
+    {
+        public object Sender { get; }
+
+        protected ViewModelMessage(object sender)
+        {
+            Sender = sender;
+        }
+    }
+
+    /// <summary>
     /// 特定のパスへの画面遷移を要求するメッセージですわ。
     /// </summary>
-    public class NavigatePathMessage : ValueChangedMessage<string>
+    public class NavigatePathMessage : ViewModelMessage
     {
-        public NavigatePathMessage(string path) : base(path) { }
+        public string Path { get; }
+        public NavigatePathMessage(string path, object sender) : base(sender)
+        {
+            Path = path;
+        }
     }
 
     /// <summary>
     /// フォルダーツリーで選択されたパスが変更されたことを通知するメッセージですわ。
     /// </summary>
-    public class SelectedPathChangedMessage : ValueChangedMessage<string>
+    public class SelectedPathChangedMessage : ViewModelMessage
     {
-        public SelectedPathChangedMessage(string path) : base(path) { }
+        public string? Path { get; }
+        public SelectedPathChangedMessage(string? path, object sender) : base(sender)
+        {
+            Path = path;
+        }
     }
 }

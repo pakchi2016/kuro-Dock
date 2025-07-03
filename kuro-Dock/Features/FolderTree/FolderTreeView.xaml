@@ -3,26 +3,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:vm="clr-namespace:Kuro_Dock.Features.FolderTree"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=vm:FolderTreeViewModel, IsDesignTimeCreatable=True}">
     <Grid>
         <TreeView ItemsSource="{Binding RootDirectories}">
-            <b:Interaction.Triggers>
-                <b:EventTrigger EventName="SelectedItemChanged">
-                    <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="SelectedItem">
-                        <b:ChangePropertyAction.Value>
-                            <Binding RelativeSource="{RelativeSource AncestorType=TreeView}" Path="SelectedItem" />
-                        </b:ChangePropertyAction.Value>
-                    </b:ChangePropertyAction>
-                </b:EventTrigger>
-            </b:Interaction.Triggers>
             <TreeView.ItemContainerStyle>
                 <Style TargetType="{x:Type TreeViewItem}">
                     <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
                 </Style>
             </TreeView.ItemContainerStyle>
+
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate DataType="{x:Type vm:DirectoryItemViewModel}" 
                                           ItemsSource="{Binding Children}">

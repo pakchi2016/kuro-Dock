@@ -1,74 +1,76 @@
-﻿using System.Collections.ObjectModel;
-using System.IO;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
-using Kuro_Dock.Core.Services;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Kuro_Dock.Core.Models;
-using System.Linq;
+using Kuro_Dock.Core.Services;
 using System;
-using CommunityToolkit.Mvvm.Messaging;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Kuro_Dock.Features.FolderTree
 {
     public partial class FolderTreeViewModel : ObservableObject
     {
-        private readonly IMessenger _messenger;
-        private readonly DirectoryService _directoryService;
+        private readonly DirectoryService? _directoryService;
         public ObservableCollection<DirectoryItemViewModel> RootDirectories { get; } = new();
 
-        [ObservableProperty]
-        private DirectoryItemViewModel? selectedItem;
-
-        public FolderTreeViewModel(IMessenger messenger)
+        private DirectoryItemViewModel? _selectedItem;
+        public DirectoryItemViewModel? SelectedItem
         {
-            _messenger = messenger;
-            _directoryService = new DirectoryService();
-            LoadRootDirectories();
+            get => _selectedItem;
+            set
+            {
+                if (ReferenceEquals(_selectedItem, value)) return;
+
+                if (_selectedItem != null)
+                {
+                    _selectedItem.IsSelected = false;
+                }
+
+                if (SetProperty(ref _selectedItem, value))
+                {
+                    if (_selectedItem != null)
+                    {
+                        _selectedItem.IsSelected = true;
+                    }
+                }
+            }
         }
 
-        partial void OnSelectedItemChanged(DirectoryItemViewModel? value)
+        // デザイン時用の空のコンストラクタ
+        public FolderTreeViewModel() { }
+
+        public FolderTreeViewModel(DirectoryService directoryService)
         {
-            if (value?.FullPath is string path)
-            {
-                _messenger.Send(new SelectedPathChangedMessage(path));
-            }
+            _directoryService = directoryService;
+            LoadRootDirectories();
         }
 
         private void LoadRootDirectories()
         {
+            if (_directoryService == null) return;
+
             RootDirectories.Clear();
             var rootDirModels = _directoryService.GetRootDirectories();
             foreach (var model in rootDirModels)
             {
-                RootDirectories.Add(new DirectoryItemViewModel(model, _directoryService));
+                RootDirectories.Add(new DirectoryItemViewModel(model, _directoryService, this));
             }
         }
 
-        /// <summary>
-        /// 指定されたパスまでツリーを展開し、項目を選択しますの。
-        /// </summary>
         public async Task NavigateTo(string path)
         {
-            if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
-            {
-                return;
-            }
+            if (string.IsNullOrEmpty(path) || !Directory.Exists(path) || _directoryService == null) return;
 
-            // パスを正規化し、各部分に分割しますわ
             var parts = path.TrimEnd(Path.DirectorySeparatorChar).Split(Path.DirectorySeparatorChar);
-            // ドライブ名（例: "C:\"）を正しく扱います
             var rootPart = Path.GetPathRoot(path);
             if (string.IsNullOrEmpty(rootPart)) return;
 
-            // まずはルートドライブを探しますの
             var currentNode = RootDirectories.FirstOrDefault(r => r.FullPath.Equals(rootPart, StringComparison.OrdinalIgnoreCase));
-            if (currentNode == null) return; // 見つからなければ終了
+            if (currentNode == null) return;
 
-            // パスの残りの部分を辿っていきますわ
-            // parts[0]はドライブ名なので、インデックス1から開始します
             for (int i = 1; i < parts.Length; i++)
             {
-                // 現在のノードを展開し、子を読み込みます
                 currentNode.IsExpanded = true;
                 await currentNode.LoadChildrenAsync();
 
@@ -77,14 +79,11 @@ namespace Kuro_Dock.Features.FolderTree
 
                 if (nextNode == null)
                 {
-                    // パスがツリー内に見つかりませんでしたわ
-                    this.SelectedItem = currentNode; // 途中まで選択
+                    this.SelectedItem = currentNode;
                     return;
                 }
                 currentNode = nextNode;
             }
-
-            // 最終的に見つかったノードを選択状態にしますの
             this.SelectedItem = currentNode;
         }
     }

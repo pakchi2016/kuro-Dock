@@ -1,10 +1,9 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using Kuro_Dock.Core.Services;
 using Kuro_Dock.Features.AddressBar;
 using Kuro_Dock.Features.FileList;
 using Kuro_Dock.Features.FolderTree;
 using Kuro_Dock.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 using System.Windows;
 
 namespace Kuro_Dock
@@ -22,28 +21,36 @@ namespace Kuro_Dock
 
         private void ConfigureServices(IServiceCollection services)
         {
-            // IMessengerをシングルトン（単一のインスタンス）として登録しますの
-            services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
+            services.AddSingleton<CommunityToolkit.Mvvm.Messaging.IMessenger>(CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default);
 
-            // 各ViewModelを登録しますわ
-            services.AddTransient<MainViewModel>();
+            // Serviceはアプリケーション全体で共有します
+            services.AddSingleton<DirectoryService>();
+            services.AddSingleton<FileService>();
+
+            // MainViewModelはアプリケーションの主役なので、一つだけ生成します
+            services.AddSingleton<MainViewModel>();
+
+            // タブで使われるViewModelは、タブが作られるたびに新しいインスタンスが必要です
+            services.AddTransient<TabViewModel>();
             services.AddTransient<AddressBarViewModel>();
             services.AddTransient<FileListViewModel>();
             services.AddTransient<FolderTreeViewModel>();
-
-            // 本来はServiceもここで登録いたしますが、それはまた次の機会に
-            // services.AddSingleton<DirectoryService>();
         }
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
+            var mainViewModel = ServiceProvider.GetRequiredService<MainViewModel>();
+
             var mainWindow = new MainWindow
             {
-                // DIコンテナからMainViewModelを取得して設定しますわ
-                DataContext = ServiceProvider.GetRequiredService<MainViewModel>()
+                DataContext = mainViewModel
             };
+
+            // MainViewModelの準備が全て整ってから、初期化（最初のタブ作成）を実行します
+            mainViewModel.Initialize();
+
             mainWindow.Show();
         }
     }
