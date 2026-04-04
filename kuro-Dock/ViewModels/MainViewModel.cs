@@ -15,6 +15,18 @@ namespace Kuro_Dock.ViewModels
         [ObservableProperty]
         private TabViewModel? selectedTab;
 
+        partial void OnSelectedTabChanged(TabViewModel? oldValue, TabViewModel? newValue)
+        {
+            if (oldValue != null)
+            {
+                oldValue.IsSelected = false; // 古いタブを非アクティブに
+            }
+            if (newValue != null)
+            {
+                newValue.IsSelected = true;  // 新しいタブをアクティブに
+            }
+        }
+
         public MainViewModel(IServiceProvider serviceProvider)
         {
             // XAMLデザイナーによる誤動作を防ぐための、厳格なチェックですわ

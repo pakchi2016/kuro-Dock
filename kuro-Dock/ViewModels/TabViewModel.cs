@@ -14,6 +14,9 @@ namespace Kuro_Dock.ViewModels
         [ObservableProperty]
         private string? header;
 
+        [ObservableProperty]
+        private bool isSelected;
+
         public FolderTreeViewModel FolderTree { get; }
         public FileListViewModel FileList { get; }
         public AddressBarViewModel AddressBar { get; }

@@ -34,11 +34,55 @@
                 </DataTemplate>
             </TabControl.ItemTemplate>
 
-            <TabControl.ContentTemplate>
-                <DataTemplate DataType="{x:Type vm:TabViewModel}">
-                    <views:ExplorerView/>
-                </DataTemplate>
-            </TabControl.ContentTemplate>
+            <TabControl.Template>
+                <ControlTemplate TargetType="TabControl">
+                    <Grid KeyboardNavigation.TabNavigation="Local">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TabPanel x:Name="HeaderPanel" 
+                                  Grid.Row="0"
+                                  Panel.ZIndex="1" 
+                                  Margin="0,2,2,0" 
+                                  IsItemsHost="True"
+                                  Background="Transparent" />
+
+                        <Border Grid.Row="1" 
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="Gray" 
+                                BorderThickness="1">
+
+                            <ItemsControl ItemsSource="{Binding Items, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Grid />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:TabViewModel}">
+                                        <views:ExplorerView>
+                                            <views:ExplorerView.Style>
+                                                <Style TargetType="UserControl">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </views:ExplorerView.Style>
+                                        </views:ExplorerView>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </TabControl.Template>
         </TabControl>
     </Grid>
 </Window>

@@ -10,10 +10,7 @@
         ShowInTaskbar="False"
         Topmost="True" 
         Background="Transparent"
-        Loaded="Window_Loaded"
-        MouseLeave=""
-        
-        >
+        Loaded="Window_Loaded">
 
     <Grid MouseLeave="ClearPanel" Style="{StaticResource SlideAnimation}" Background="Transparent" AllowDrop="True">
         <Grid.RenderTransform>
