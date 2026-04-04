@@ -1,0 +1,639 @@
+﻿----- FILE: App.xaml -----
+<Application x:Class="Kuro_DockLauncher2.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Kuro_DockLauncher2"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <Storyboard x:Key="SlideInFromRightStoryboard">
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                         To="0" Duration="0:0:0.3">
+                <DoubleAnimation.EasingFunction>
+                    <QuadraticEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+
+        <Storyboard x:Key="SlideOutToRightStoryboard">
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                         To="89" Duration="0:0:0.3">
+                <DoubleAnimation.EasingFunction>
+                    <QuadraticEase EasingMode="EaseIn"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+        <Style x:Key="SlideAnimation" TargetType="FrameworkElement">
+            <Style.Triggers>
+                <EventTrigger RoutedEvent="MouseEnter">
+                    <BeginStoryboard Storyboard="{StaticResource SlideInFromRightStoryboard}"/>
+                </EventTrigger>
+                <EventTrigger RoutedEvent="DragEnter">
+                    <BeginStoryboard Storyboard="{StaticResource SlideInFromRightStoryboard}"/>
+                </EventTrigger>
+                <EventTrigger RoutedEvent="ContextMenu.Opened">
+                    <BeginStoryboard Storyboard="{StaticResource SlideInFromRightStoryboard}"/>
+                </EventTrigger>
+
+                <EventTrigger RoutedEvent="MouseLeave">
+                    <BeginStoryboard Storyboard="{StaticResource SlideOutToRightStoryboard}"/>
+                </EventTrigger>
+                <EventTrigger RoutedEvent="DragLeave">
+                    <BeginStoryboard Storyboard="{StaticResource SlideOutToRightStoryboard}"/>
+                </EventTrigger>
+            </Style.Triggers>
+        </Style>
+    </Application.Resources>
+
+</Application>
+----------
+----- FILE: App.xaml.cs -----
+using System.Configuration;
+using System.Data;
+using System.Windows;
+
+namespace Kuro_DockLauncher2
+{
+    /// <summary>
+    /// Interaction logic for App.xaml
+    /// </summary>
+    public partial class App : Application
+    {
+    }
+
+}
+----------
+----- FILE: AssemblyInfo.cs -----
+using System.Windows;
+
+[assembly: ThemeInfo(
+    ResourceDictionaryLocation.None,            //where theme specific resource dictionaries are located
+                                                //(used if a resource is not found in the page,
+                                                // or application resource dictionaries)
+    ResourceDictionaryLocation.SourceAssembly   //where the generic resource dictionary is located
+                                                //(used if a resource is not found in the page,
+                                                // app, or any theme specific resource dictionaries)
+)]
+----------
+----- FILE: MainWindow.xaml -----
+<Window x:Class="KuroDockLauncher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="KuroDock" 
+        Width="300"
+        
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="True" 
+        Background="Transparent"
+        Loaded="Window_Loaded">
+
+    <Grid MouseLeave="ClearPanel" Style="{StaticResource SlideAnimation}" Background="Transparent" AllowDrop="True">
+        <Grid.RenderTransform>
+            <TranslateTransform X="0"/>
+        </Grid.RenderTransform>
+        <Grid HorizontalAlignment="Right">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="90"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Content="×" Width="90" Height="30" Grid.Row="0" Grid.Column="2" Click="CloseButton_Click" />
+            <Border Grid.Row="1" Grid.Column="2" BorderBrush="Black" BorderThickness="1">
+                <StackPanel x:Name="IndexFolderPanel">
+                    <StackPanel.Background>
+                        <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                            <GradientStop Color="#A0E0E6FA" Offset="0.0" />
+                            <GradientStop Color="#A0C096EC" Offset="0.5" />
+                            <GradientStop Color="#A08875D1" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </StackPanel.Background>
+                    <Border x:Name="FolderInputBorder" Height="30"/>
+                    <StackPanel.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="フォルダインデックスを追加" Click="AddFolderIndex_Click"/>
+                            <Separator/>
+                            <MenuItem Header="閉じる"/>
+                        </ContextMenu>
+                    </StackPanel.ContextMenu>
+                </StackPanel>
+            </Border>
+            <Border Grid.Row="2" Grid.Column="2" BorderBrush="Black" BorderThickness="1">
+                <StackPanel x:Name="IndexFilePanel">
+                    <StackPanel.Background>
+                        <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                            <GradientStop Color="#A0E0E6FA" Offset="0.0" />
+                            <GradientStop Color="#A0C096EC" Offset="0.5" />
+                            <GradientStop Color="#A08875D1" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </StackPanel.Background>
+                    <Border x:Name="FileInputBorder" Height="30"/>
+                    <StackPanel.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="ファイルインデックスを追加" Click="AddFileIndex_Click"/>
+                            <Separator/>
+                            <MenuItem Header="閉じる"/>
+                        </ContextMenu>
+                    </StackPanel.ContextMenu>
+                </StackPanel>
+            </Border>
+            <StackPanel x:Name="FolderMiddlePanel" Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Background="Gray"/>
+            <StackPanel x:Name="FileMiddlePanel" Grid.Row="2" Grid.Column="1" Background="Gray"/>
+            <StackPanel x:Name="FolderPulldown" Grid.Row="1" Grid.RowSpan="2" Grid.Column="0" Background="DarkGray"/>
+        </Grid>
+    </Grid>
+</Window>
+----------
+----- FILE: MainWindow.xaml.cs -----
+using KuroDockLauncher2.Index;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Controls;
+
+namespace KuroDockLauncher
+{
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            // 画面の「作業領域（タスクバーを除いた領域）」を取得します
+            var workArea = SystemParameters.WorkArea;
+            // ウィンドウの高さを画面の高さに合わせます
+            this.Height = workArea.Height;
+            // ウィンドウの左位置 = 画面右端 - ウィンドウの幅
+            this.Left = workArea.Right - this.Width;
+            // ウィンドウの上位置 = 作業領域の上端
+            this.Top = workArea.Top;
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+
+        private void AddFolderIndex_Click(object sender, RoutedEventArgs e)
+        {
+            var indexdoc = new IndexFolderControl();
+            indexdoc.ShowDialog();
+        }
+
+        private void AddFileIndex_Click(object sender, RoutedEventArgs e)
+        {
+            var indexdoc = new IndexFileControl();
+            indexdoc.ShowDialog();
+        }
+
+        private void ClearPanel(object sender, MouseEventArgs e)
+        {
+            var middleFolderPanel = (StackPanel)this.FindName("FolderMiddlePanel");
+            if (middleFolderPanel != null) middleFolderPanel.Children.Clear();
+            var middleFilePanel = (StackPanel)this.FindName("FileMiddlePanel");
+            if (middleFilePanel != null) middleFilePanel.Children.Clear();
+            var pulldown = (StackPanel)this.FindName("FolderPulldown");
+            if (pulldown != null) pulldown.Children.Clear();
+        }   
+    }
+}
+----------
+----- FILE: indexFileControl.xaml -----
+<Window x:Class="KuroDockLauncher2.Index.IndexFileControl"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:KuroDockLauncher2.Index"
+        mc:Ignorable="d"
+        Background="Black"
+        Title="追加するインデックスの名前を入力してください" Height="150" Width="300">
+    <Grid Height="100" VerticalAlignment="Top">
+        <TextBox x:Name="IndexNameTextBox" 
+                 VerticalAlignment="Top" 
+                 Margin="10,25,10,0" 
+                 TextWrapping="Wrap" 
+                 FontSize="16" />
+        <Button Content="OK" Click="OKButton_Click"
+                HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                Height="30" Width="60" Margin="10,0,0,10"
+                Background="Gray"/>
+        <Button Content="Cancel" Click="CancelButton_Click"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Height="30" Width="60" Margin="0,0,10,10"
+                Background="Gray"/>
+    </Grid>
+</Window>
+----------
+----- FILE: indexFileControl.xaml.cs -----
+using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+
+namespace KuroDockLauncher2.Index
+{
+    /// <summary>
+    /// IndexControl.xaml の相互作用ロジック
+    /// </summary>
+    
+    public partial class IndexFileControl : Window
+    {
+        string index = "IndexFilePanel";
+        string middle = "FileMiddlePanel";
+        public IndexFileControl()
+        {
+            InitializeComponent();
+        }
+
+        private void OKButton_Click(object sender, RoutedEventArgs e)
+        {
+            var mainwindow = Application.Current.MainWindow;
+            if (mainwindow == null) { return; }
+
+            var panel = (StackPanel)mainwindow.FindName(index);
+            if (panel == null) { return; }
+
+            var middlePanel = (StackPanel)mainwindow.FindName(middle);
+
+            string indexName = IndexNameTextBox.Text.Trim();
+            Button IndexButton = new Button
+            {
+                Width = 90,
+                Height = 30,
+                Margin = new Thickness(0, 1, 0, 0),
+                Content = indexName
+            };
+            IndexButton.AllowDrop = true;
+            IndexButton.Drop += Bookmark_Drop;
+            IndexButton.MouseEnter += Bookmark_View;
+
+            ContextMenu menu = new ContextMenu();
+            MenuItem removeItem = new MenuItem();
+            removeItem.Header = "ファイルインデックスボタン削除";
+            removeItem.Click += (s, args) =>
+            {
+                panel.Children.Remove(IndexButton);
+                middlePanel.Children.Clear();
+            };
+            menu.Items.Add(removeItem);
+            IndexButton.ContextMenu = menu;
+
+            int panelIndex = panel.Children.Count - 1;
+            panel.Children.Insert(panelIndex, IndexButton);
+
+            this.DialogResult = true; // ダイアログを閉じて、OKが選択されたことを示す
+            this.Close();
+        }
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+
+            this.DialogResult = true; // ダイアログを閉じて、OKが選択されたことを示す
+            this.Close();
+        }
+
+        private void Bookmark_Drop(object sender, DragEventArgs e)
+        {
+            Button button = (Button)sender;
+
+            List<string> pathList = button.Tag as List<string> ?? new List<string>();
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                foreach (var file in files)
+                {
+                    // ファイルの場合の処理
+                    if (File.Exists(file)) pathList.Add(file);
+                }
+                button.Tag = pathList;
+            }
+
+            var mainwindow = Application.Current.MainWindow;
+            var panel = (StackPanel)mainwindow.FindName(middle);
+            if (panel != null)
+            {
+                panel.Children.Clear();
+                foreach (string entry in pathList)
+                {
+                    AddFileButton(entry, panel);
+                }
+            }
+        }
+
+        private void Bookmark_View(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed) { return; }
+            if (sender is Button indexButton && indexButton.Tag is List<string> pathList)
+            {
+                if (pathList.Count == 0) { return; }
+                var mainwindow = Application.Current.MainWindow;
+                var panel = (StackPanel)mainwindow.FindName(middle);
+
+                if (panel == null) { return; }
+
+                panel.Children.Clear();
+                foreach (string entry in pathList)
+                {
+                    AddBookmarkButton(entry, panel);
+                }
+            }
+        }
+
+        public static void AddBookmarkButton(string item, StackPanel panel)
+        {
+
+            Button newbutton = new Button
+            {
+                Width = 90,
+                Height = 30,
+                Margin = new Thickness(0, 1, 0, 0),
+                Tag = item,
+                Content = System.IO.Path.GetFileName(item),
+            };
+
+            newbutton.Click += BookmarkButton_Click;
+            panel.Children.Add(newbutton);
+        }
+
+        public static void AddFileButton(string item, StackPanel panel)
+        {
+            Button newbutton = new Button
+            {
+                Width = 90,
+                Height = 30,
+                Margin = new Thickness(0, 1, 0, 0),
+                Tag = item,
+                Content = System.IO.Path.GetFileName(item),
+            };
+            panel.Children.Add(newbutton);
+            newbutton.Click += BookmarkButton_Click;
+        }
+        public static void BookmarkButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = (Button)sender;
+
+            Process.Start(
+                new ProcessStartInfo
+                {
+                    FileName = button.Tag.ToString(),
+                    UseShellExecute = true
+                }
+            );
+        }
+    }
+}
+----------
+----- FILE: indexFolderControl.xaml -----
+<Window x:Class="KuroDockLauncher2.Index.IndexFolderControl"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:KuroDockLauncher2.Index"
+        mc:Ignorable="d"
+        Background="Black"
+        Title="追加するインデックスの名前を入力してください" Height="150" Width="300">
+    <Grid Height="100" VerticalAlignment="Top">
+        <TextBox x:Name="IndexNameTextBox" 
+                 VerticalAlignment="Top" 
+                 Margin="10,25,10,0" 
+                 TextWrapping="Wrap" 
+                 FontSize="16" />
+        <Button Content="OK" Click="OKButton_Click"
+                HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                Height="30" Width="60" Margin="10,0,0,10"
+                Background="Gray"/>
+        <Button Content="Cancel" Click="CancelButton_Click"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Height="30" Width="60" Margin="0,0,10,10"
+                Background="Gray"/>
+    </Grid>
+</Window>
+----------
+----- FILE: indexFolderControl.xaml.cs -----
+using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Ribbon;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+
+namespace KuroDockLauncher2.Index
+{
+    /// <summary>
+    /// IndexControl.xaml の相互作用ロジック
+    /// </summary>
+    public partial class IndexFolderControl : Window
+    {
+        public IndexFolderControl()
+        {
+            InitializeComponent();
+        }
+
+        private string index = "IndexFolderPanel";
+        private string middle = "FolderMiddlePanel";
+        private string side = "FolderPulldown";
+
+        private void OKButton_Click(object sender, RoutedEventArgs e)
+        {
+            var mainwindow = Application.Current.MainWindow;
+            if (mainwindow == null) { return; }
+
+            var panel = mainwindow.FindName(index) as StackPanel;
+            if (panel == null) { return; }
+
+            var middlePanel = mainwindow.FindName(middle) as StackPanel;
+
+            string indexName = IndexNameTextBox.Text.Trim();
+            Button IndexButton = new Button
+            {
+                Width = 90,
+                Height = 30,
+                Margin = new Thickness(0, 1, 0, 0),
+                Content = indexName,
+                Background = Brushes.AliceBlue
+            };
+            IndexButton.AllowDrop = true;
+            IndexButton.Drop += Bookmark_Drop;
+            IndexButton.MouseEnter += Bookmark_View;
+
+            ContextMenu menu = new ContextMenu();
+            MenuItem removeItem = new MenuItem();
+            removeItem.Header = "フォルダインデックスボタン削除";
+            removeItem.Click += (s, args) =>
+            {
+                panel.Children.Remove(IndexButton);
+                middlePanel?.Children.Clear();
+            };
+            menu.Items.Add(removeItem);
+            IndexButton.ContextMenu = menu;
+
+            int panelIndex = panel.Children.Count -1;
+            panel.Children.Insert(panelIndex, IndexButton);
+
+            this.DialogResult = true; // ダイアログを閉じて、OKが選択されたことを示す
+            this.Close();
+        }
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+
+            this.DialogResult = true; // ダイアログを閉じて、OKが選択されたことを示す
+            this.Close();
+        }
+
+        private void Bookmark_Drop(object sender, DragEventArgs e)
+        {
+            Button button = (Button)sender;
+
+            List<string> pathList = button.Tag as List<string> ?? new List<string>();
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                foreach (var file in files)
+                {
+                    // フォルダの場合の処理
+                    if(Directory.Exists(file)) pathList.Add(file);
+                }
+                button.Tag = pathList;
+            }
+
+            var mainwindow = Application.Current.MainWindow;
+            var panel = (StackPanel)mainwindow.FindName(middle);
+            var sidepanel = (StackPanel)mainwindow.FindName(side);
+            if (panel != null)
+            {
+                panel.Children.Clear();
+                sidepanel?.Children.Clear();
+                foreach (string entry in pathList)
+                {
+                    AddBookmarkButton(entry, panel);
+                }
+            }
+        }
+
+        private void Bookmark_View(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed) { return; }
+            if (sender is Button indexButton && indexButton.Tag is List<string> pathList)
+            {
+                if (pathList.Count == 0) { return; }
+                var panel = Application.Current.MainWindow.FindName(middle) as StackPanel;
+                var sidepanel = Application.Current.MainWindow.FindName(side) as StackPanel;
+
+                if (panel == null) { return; }
+
+                panel.Children.Clear();
+                sidepanel?.Children.Clear();
+                foreach (string entry in pathList)
+                {
+                    AddBookmarkButton(entry, panel);
+                }
+            }
+        }
+
+
+        public static void AddBookmarkButton(string item, StackPanel panel)
+        {
+
+            Button newbutton = new Button
+            {
+                Width = 90,
+                Height = 30,
+                Margin = new Thickness(0, 1, 0, 0),
+                Tag = item,
+                Content = System.IO.Path.GetFileName(item),
+            };
+
+            if (Directory.Exists(item))
+            {
+                newbutton.MouseEnter += BookmarkButton_MouseOn;
+            }
+            newbutton.Click += BookmarkButton_Click;
+            panel.Children.Add(newbutton);
+        }
+
+        public static void AddFileButton(string item, StackPanel panel)
+        {
+            Button newbutton = new Button
+            {
+                Width = 90,
+                Height = 30,
+                Margin = new Thickness(0, 1, 0, 0),
+                Tag = item,
+                Content = System.IO.Path.GetFileName(item),
+            };
+            panel.Children.Add(newbutton);
+            newbutton.Click += BookmarkButton_Click;
+        }
+        public static void BookmarkButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = (Button)sender;
+
+            Process.Start(
+                new ProcessStartInfo
+                {
+                    FileName = button.Tag.ToString(),
+                    UseShellExecute = true
+                }
+            );
+        }
+
+        public static void BookmarkButton_MouseOn(object sender, RoutedEventArgs e)
+        {
+            string side = "FolderPulldown";
+            var mainwindow = Application.Current.MainWindow;
+            if (mainwindow == null) { return; }
+            var panel = (StackPanel)mainwindow.FindName(side);
+
+            Button button = (Button)sender;
+            panel?.Children.Clear();
+            foreach (string entry in Directory.EnumerateFileSystemEntries((string)button.Tag))
+            {
+                Button newButton = new Button
+                {
+                    Width = 90,
+                    Height = 30,
+                    Margin = new Thickness(0, 1, 0, 0),
+                    Content = System.IO.Path.GetFileName(entry),
+                    Tag = entry
+                };
+                panel?.Children.Add(newButton);
+                newButton.Click += BookmarkButton_Click;
+
+            }
+        }
+    }
+}
+----------

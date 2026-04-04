@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Kuro-DockLauncher2/Kuro-DockLauncher2.csproj" />
+  <Project Path="kuro-Dock/kuro-Dock.csproj" />
+</Solution>
