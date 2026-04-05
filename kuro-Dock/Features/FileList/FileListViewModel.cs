@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Kuro_Dock.Core.Models;
 using Kuro_Dock.Core.Services;
 using System;
 using System.Collections.ObjectModel;
@@ -14,9 +13,9 @@ namespace Kuro_Dock.Features.FileList
         private readonly DirectoryService _directoryService;
         private readonly FileService _fileService;
 
-        public ObservableCollection<object> Items { get; } = new();
+        // ★ object型ではなく、アイコンプロパティを持つ新しいクラスに変更しますわ
+        public ObservableCollection<FileSystemItemViewModel> Items { get; } = new();
 
-        // C#の標準的なイベントで、ナビゲーション要求を通知します
         public event Action<string>? DirectoryNavigationRequested;
 
         public FileListViewModel(DirectoryService directoryService, FileService fileService)
@@ -33,29 +32,33 @@ namespace Kuro_Dock.Features.FileList
             var directories = await Task.Run(() => _directoryService.GetSubDirectories(path));
             foreach (var dir in directories)
             {
-                Items.Add(dir);
+                // ★ 生のデータではなく、ViewModelで包んでから追加しますのよ
+                Items.Add(new FileSystemItemViewModel(dir));
             }
 
             var files = await Task.Run(() => _fileService.GetFiles(path));
             foreach (var file in files)
             {
-                Items.Add(file);
+                // ★ こちらも同様ですわ
+                Items.Add(new FileSystemItemViewModel(file));
             }
         }
 
         [RelayCommand]
-        private void OpenItem(object? item)
+        private void OpenItem(FileSystemItemViewModel? item) // ★ 引数の型も変更します
         {
-            if (item is DirectoryItem dir)
+            if (item == null) return;
+
+            // ★ is判定ではなく、プロパティでフォルダかどうかを判定します
+            if (item.IsDirectory)
             {
-                // イベントを発行します
-                DirectoryNavigationRequested?.Invoke(dir.FullPath);
+                DirectoryNavigationRequested?.Invoke(item.FullPath);
             }
-            else if (item is FileItem file)
+            else
             {
                 try
                 {
-                    var psi = new ProcessStartInfo(file.FullPath) { UseShellExecute = true };
+                    var psi = new ProcessStartInfo(item.FullPath) { UseShellExecute = true };
                     Process.Start(psi);
                 }
                 catch (Exception) { /* エラー処理 */ }

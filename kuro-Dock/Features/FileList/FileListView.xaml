@@ -6,8 +6,7 @@
              xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:local="clr-namespace:Kuro_Dock.Features.FileList"
              xmlns:models="clr-namespace:Kuro_Dock.Core.Models"
-             mc:Ignorable="d" 
-             d:DataContext="{d:DesignInstance Type=local:FileListViewModel, IsDesignTimeCreatable=True}">
+             mc:Ignorable="d" >
     <Grid>
         <ListView ItemsSource="{Binding Items}" x:Name="ItemsListView">
             <b:Interaction.Triggers>
@@ -19,17 +18,22 @@
 
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="名前" DisplayMemberBinding="{Binding Name}" Width="250" />
+                    <GridViewColumn Header="名前" Width="250">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="2">
+                                    <Image Source="{Binding Icon}" Width="16" Height="16" Margin="0,0,5,0" />
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+
                     <GridViewColumn Header="更新日時" DisplayMemberBinding="{Binding LastWriteTime, StringFormat='yyyy/MM/dd HH:mm'}" Width="150" />
                     <GridViewColumn Header="種類" DisplayMemberBinding="{Binding ItemType}" Width="120" />
                     <GridViewColumn Header="サイズ" DisplayMemberBinding="{Binding Size, StringFormat='N0'}" Width="100" />
                 </GridView>
             </ListView.View>
-
-            <ListView.Resources>
-                <DataTemplate DataType="{x:Type models:DirectoryItem}" />
-                <DataTemplate DataType="{x:Type models:FileItem}" />
-            </ListView.Resources>
         </ListView>
     </Grid>
 </UserControl>
