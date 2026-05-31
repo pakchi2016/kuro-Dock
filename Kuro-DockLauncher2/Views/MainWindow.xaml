@@ -125,7 +125,7 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <ItemsControl Grid.Column="2" ItemsSource="{Binding IndexItems}" Padding="0,10,0,30">
+        <ItemsControl Grid.Column="2" ItemsSource="{Binding IndexItems}" Padding="0,10,0,100">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Button Content="{Binding Name}" 
@@ -137,5 +137,12 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+        <Image Grid.Column="2" 
+               Source="/Images/kuro.png"
+               Width="96" Height="96"
+               VerticalAlignment="Bottom" 
+               HorizontalAlignment="Center" 
+               Margin="0,0,0,3"
+               IsHitTestVisible="False"/>
     </Grid>
 </Window>

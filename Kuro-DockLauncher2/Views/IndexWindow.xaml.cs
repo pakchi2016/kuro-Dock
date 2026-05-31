@@ -23,7 +23,7 @@ namespace Kuro_DockLauncher2.Views
             }
             else
             {
-                MessageBox.Show("名前を入力しなさいな。", "警告", MessageBoxButton.OK, MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show("名前を入力しなさいな。", "警告", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

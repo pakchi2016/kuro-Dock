@@ -6,7 +6,16 @@
     <RootNamespace>Kuro_DockLauncher2</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Images\kuro.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\kuro.png" />
+  </ItemGroup>
 
 </Project>

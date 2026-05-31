@@ -43,14 +43,14 @@ namespace Kuro_DockLauncher2.Views
         }
 
         // インデックスボタンにファイル/フォルダがドロップされた時の処理ですわ
-        private void IndexButton_Drop(object sender, DragEventArgs e)
+        private void IndexButton_Drop(object sender, System.Windows.DragEventArgs e)
         {
             // イベントの発生源（ボタン）の裏側にいる DataContext（IndexItem）を優雅に取り出します
             if (sender is System.Windows.FrameworkElement element && element.DataContext is IndexItem indexItem)
             {
-                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
                 {
-                    string[] droppedPaths = (string[])e.Data.GetData(DataFormats.FileDrop);
+                    string[] droppedPaths = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
 
                     foreach (string path in droppedPaths)
                     {
@@ -69,7 +69,7 @@ namespace Kuro_DockLauncher2.Views
         // 右クリックメニューの「終了」が押された時の処理
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Shutdown();
+            System.Windows.Application.Current.Shutdown();
         }
 
         // ★ async を追加し、非同期メソッドに昇華させますわ
