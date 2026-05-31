@@ -2,10 +2,7 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup />
   <ItemGroup>
-    <Compile Update="index\indexFileControl.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="index\indexFolderControl.xaml.cs">
+    <Compile Update="Views\IndexWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
