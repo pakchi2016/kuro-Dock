@@ -7,9 +7,12 @@
         Loaded="Window_Loaded"
         >
 
-    <Grid x:Name="DockPanel" HorizontalAlignment="Right" Background="#AA222222" Grid.Row="1" MouseLeave="DockPanel_MouseLeave">
+    <Grid x:Name="DockPanel" HorizontalAlignment="Right" Background="#AA222222" Grid.Row="1" AllowDrop="True"
+          MouseLeave="DockPanel_MouseLeave"
+          ContextMenuOpening="DockPanel_ContextMenuOpening"
+          ContextMenuClosing="DockPanel_ContextMenuClosing">
         <Grid.RenderTransform>
-            <TranslateTransform X="95"/>
+            <TranslateTransform X="99"/>
         </Grid.RenderTransform>
 
         <Grid.Style>
@@ -27,14 +30,13 @@
                             </Storyboard>
                         </BeginStoryboard>
                     </EventTrigger>
-
-                    <EventTrigger RoutedEvent="MouseLeave">
+                    <EventTrigger RoutedEvent="DragEnter">
                         <BeginStoryboard>
                             <Storyboard>
                                 <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                                                 To="95" Duration="0:0:0.3" >
+                             To="0" Duration="0:0:0.2" >
                                     <DoubleAnimation.EasingFunction>
-                                        <QuadraticEase EasingMode="EaseIn"/>
+                                        <QuadraticEase EasingMode="EaseOut"/>
                                     </DoubleAnimation.EasingFunction>
                                 </DoubleAnimation>
                             </Storyboard>
@@ -59,7 +61,7 @@
         </Grid.ColumnDefinitions>
 
         <ItemsControl Grid.Column="0" ItemsSource="{Binding CurrentSubBookmarks}" 
-                      Background="#99000000" Padding="10,10,10,10"
+                      Background="#99000000"
                       Visibility="Visible">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -92,7 +94,7 @@
         </ItemsControl>
 
         <ItemsControl Grid.Column="1" ItemsSource="{Binding CurrentBookmarks}" 
-                      Background="#77111111" Padding="10,10,10,10"
+                      Background="#77111111"
                       Visibility="Visible">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -103,6 +105,11 @@
                             Click="Bookmark_Click"
                             MouseEnter="Bookmark_MouseEnter" 
                             Opacity="0">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="名前を変更" Click="RenameBookmark_Click"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
                         <Button.RenderTransform>
                             <TranslateTransform Y="-20"/>
                         </Button.RenderTransform>

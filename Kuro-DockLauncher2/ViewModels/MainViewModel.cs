@@ -84,5 +84,6 @@ namespace Kuro_DockLauncher2.ViewModels
                 System.Diagnostics.Debug.WriteLine($"保存エラー: {ex.Message}");
             }
         }
+        public void Save() => SaveConfiguration();
     }
 }

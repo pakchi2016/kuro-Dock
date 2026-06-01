@@ -10,6 +10,8 @@ namespace Kuro_DockLauncher2.Views
     {
         private int _currentAnimationId = 0;
         private int _currentSubAnimationId = 0;
+        private bool _isContextMenuOpen = false;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -145,15 +147,10 @@ namespace Kuro_DockLauncher2.Views
         // ★ パネル全体からマウスが完全に離れた時に中身をクリアする美しい処理ですわ
         private void DockPanel_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            // マウスが離れたので、展開中のアニメーションを強制停止させるためにIDを更新します
-            _currentAnimationId++;
-            _currentSubAnimationId++;
+            // メニューが開いている最中（別名付与など）の「偽のMouseLeave」は完全に無視しますわ！
+            if (_isContextMenuOpen) return;
 
-            if (this.DataContext is MainViewModel vm) 
-            {
-                vm.CurrentBookmarks.Clear();
-                vm.CurrentSubBookmarks.Clear();
-            }
+            ClosePanel();
         }
 
         // ブックマークボタンがクリックされた時の起動処理ですわ
@@ -176,6 +173,71 @@ namespace Kuro_DockLauncher2.Views
                     System.Windows.MessageBox.Show($"起動に失敗しましたわ。\n{ex.Message}");
                 }
             }
+        }
+
+        // ★右クリックメニューから「名前を変更」が選ばれたときの処理です
+        private void RenameBookmark_Click(object sender, RoutedEventArgs e)
+        {
+            // メニューの大元であるボタンの裏側にいる BookmarkItem を取り出します
+            if (sender is System.Windows.Controls.MenuItem menuItem && menuItem.DataContext is BookmarkItem bookmark)
+            {
+                // 名前変更ウィンドウを呼び出しますわ
+                var window = new RenameWindow(bookmark.Name);
+                if (window.ShowDialog() == true)
+                {
+                    // エイリアスを上書きします！
+                    // ここで値を入れた瞬間、第1段階で仕込んだ魔法によって画面の文字が即座に切り替わりますわ
+                    bookmark.Alias = window.NewAlias;
+
+                    // 忘れずにJSONへ保存させますわよ
+                    if (this.DataContext is MainViewModel vm)
+                    {
+                        vm.Save();
+                    }
+                }
+            }
+        }
+
+        private void DockPanel_ContextMenuOpening(object sender, System.Windows.Controls.ContextMenuEventArgs e)
+        {
+            _isContextMenuOpen = true;
+        }
+
+        private void DockPanel_ContextMenuClosing(object sender, System.Windows.Controls.ContextMenuEventArgs e)
+        {
+            _isContextMenuOpen = false;
+
+            // メニューでの用事が済んだ後、すでにマウスがパネルの外にあれば、ここで優雅に閉じます
+            if (!DockPanel.IsMouseOver)
+            {
+                ClosePanel();
+            }
+        }
+
+        private void ClosePanel()
+        {
+            _currentAnimationId++;
+            _currentSubAnimationId++;
+
+            if (this.DataContext is MainViewModel vm)
+            {
+                vm.CurrentBookmarks.Clear();
+                vm.CurrentSubBookmarks.Clear();
+            }
+
+            // XAMLの代わりに、C#側からスライドアウトのアニメーションを命じます
+            var anim = new System.Windows.Media.Animation.DoubleAnimation
+            {
+                To = 95,
+                Duration = new System.Windows.Duration(System.TimeSpan.FromSeconds(0.3)),
+                EasingFunction = new System.Windows.Media.Animation.QuadraticEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn }
+            };
+
+            var sb = new System.Windows.Media.Animation.Storyboard();
+            System.Windows.Media.Animation.Storyboard.SetTarget(anim, DockPanel);
+            System.Windows.Media.Animation.Storyboard.SetTargetProperty(anim, new PropertyPath("(UIElement.RenderTransform).(TranslateTransform.X)"));
+            sb.Children.Add(anim);
+            sb.Begin();
         }
     }
 }
