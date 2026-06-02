@@ -2,5 +2,5 @@
   <Project Path="Kuro-DockLauncher2/Kuro-DockLauncher2.csproj">
     <BuildType Project="Release" />
   </Project>
-  <Project Path="kuro-Dock/kuro-Dock.csproj" />
+  <Project Path="Kuro_DockFortress/Kuro_DockFortress.csproj" Id="ffb4c84c-2b9a-4aba-9d8f-be140c1e0708" />
 </Solution>
