@@ -79,28 +79,48 @@ namespace Kuro_DockLauncher2.Views
         {
             if (sender is System.Windows.FrameworkElement element && element.DataContext is IndexItem indexItem)
             {
+                int animationId = ++_currentAnimationId;
+
+                await System.Threading.Tasks.Task.Delay(150);
+                if (animationId != _currentAnimationId) return;
+
+                System.Windows.Point pos = element.TranslatePoint(new System.Windows.Point(0, 0), DockPanel);
+                BookmarksPanel.Margin = new Thickness(0, pos.Y - 12, 0, 0);
+
                 if (this.DataContext is MainViewModel vm)
                 {
                     // ★ 新しいインデックスにマウスが乗ったので、アニメーションIDを更新します
                     // これにより、もし前のすだれ展開が途中でも、古いループは破棄されますわ
-                    int animationId = ++_currentAnimationId;
+                    //int animationId = ++_currentAnimationId;
 
                     vm.CurrentBookmarks.Clear();
 
                     _currentSubAnimationId++;
                     vm.CurrentSubBookmarks.Clear();
 
-                    // データを1つずつ、ディレイをかけながら追加していきますわ
-                    foreach (var bookmark in indexItem.Bookmarks)
+                    if (indexItem.Bookmarks.Count > 0)
                     {
-                        // 展開中にマウスが別の場所へ移動していたら、即座に追加を中止する安全装置です
-                        if (animationId != _currentAnimationId) break;
+                        // ★第一幕：先鋒のボタンだけを右からスライドインさせますわ
+                        var firstBookmark = indexItem.Bookmarks[0];
+                        firstBookmark.InitialOffsetX = 50; // 右から50pxスライド
+                        firstBookmark.InitialOffsetY = 0;  // 縦の動きは無し
+                        vm.CurrentBookmarks.Add(firstBookmark);
 
-                        vm.CurrentBookmarks.Add(bookmark);
+                        // 先鋒がスライドしきるまで少し長めに待ちますわ（150msのアニメーション＋余韻）
+                        await System.Threading.Tasks.Task.Delay(180);
 
-                        // ★ ここが「天津すだれ」の極意！ 30ミリ秒だけ待ってから次を追加します
-                        // この時間が短いほど速く、長いほどゆっくりと展開されますわ
-                        await System.Threading.Tasks.Task.Delay(30);
+                        // ★第二幕：後続のボタンを上から天津すだれの如く展開しますわ
+                        for (int i = 1; i < indexItem.Bookmarks.Count; i++)
+                        {
+                            if (animationId != _currentAnimationId) break;
+
+                            var bookmark = indexItem.Bookmarks[i];
+                            bookmark.InitialOffsetX = 0;   // 横の動きは無し
+                            bookmark.InitialOffsetY = -20; // 上から20pxスライド
+                            vm.CurrentBookmarks.Add(bookmark);
+
+                            await System.Threading.Tasks.Task.Delay(30);
+                        }
                     }
                 }
             }
@@ -111,10 +131,16 @@ namespace Kuro_DockLauncher2.Views
         {
             if (sender is System.Windows.FrameworkElement element && element.DataContext is BookmarkItem bookmark)
             {
+                int animationId = ++_currentSubAnimationId;
+
+                await System.Threading.Tasks.Task.Delay(150);
+                if (animationId != _currentSubAnimationId) return;
+
+                System.Windows.Point pos = element.TranslatePoint(new System.Windows.Point(0, 0), DockPanel);
+                SubBookmarksPanel.Margin = new Thickness(0, pos.Y - 12, 0, 0);
+
                 if (this.DataContext is MainViewModel vm)
                 {
-                    int animationId = ++_currentSubAnimationId;
-
                     // 別のブックマークに乗った瞬間、まずは第3階層を綺麗に掃除します
                     vm.CurrentSubBookmarks.Clear();
 
@@ -124,15 +150,41 @@ namespace Kuro_DockLauncher2.Views
                         try
                         {
                             // フォルダ内のファイルとフォルダのパスをすべて取得します
-                            var entries = System.IO.Directory.EnumerateFileSystemEntries(bookmark.Path);
+                            var entries = System.IO.Directory.EnumerateFileSystemEntries(bookmark.Path).ToList();
 
-                            foreach (string path in entries)
+                            if (entries.Count > 0)
                             {
-                                // アニメーション中にマウスが外れたら即座に中止する安全装置です
-                                if (animationId != _currentSubAnimationId) break;
+                                // ★第一幕：先鋒（1つ目の要素のアイコンを取得して追加しますわ）
+                                string firstPath = entries[0];
+                                bool isFirstFolder = System.IO.Directory.Exists(firstPath);
 
-                                vm.CurrentSubBookmarks.Add(new BookmarkItem { Path = path });
-                                await System.Threading.Tasks.Task.Delay(30);
+                                vm.CurrentSubBookmarks.Add(new BookmarkItem
+                                {
+                                    Path = firstPath,
+                                    InitialOffsetX = 50,
+                                    InitialOffsetY = 0,
+                                    Icon = Kuro_DockLauncher2.Helpers.IconHelper.GetIcon(firstPath, isFirstFolder) // ★ここに追加しましたわ！
+                                });
+
+                                await System.Threading.Tasks.Task.Delay(180);
+
+                                // ★第二幕：後続（2つ目以降の要素も、ループ内で1つずつアイコンを取得しますわ）
+                                for (int i = 1; i < entries.Count; i++)
+                                {
+                                    if (animationId != _currentSubAnimationId) break;
+
+                                    string path = entries[i];
+                                    bool isFolder = System.IO.Directory.Exists(path);
+
+                                    vm.CurrentSubBookmarks.Add(new BookmarkItem
+                                    {
+                                        Path = path,
+                                        InitialOffsetX = 0,
+                                        InitialOffsetY = -20,
+                                        Icon = Kuro_DockLauncher2.Helpers.IconHelper.GetIcon(path, isFolder) // ★ここに追加しましたわ！
+                                    });
+                                    await System.Threading.Tasks.Task.Delay(30);
+                                }
                             }
                         }
                         catch
@@ -145,7 +197,7 @@ namespace Kuro_DockLauncher2.Views
         }
 
         // ★ パネル全体からマウスが完全に離れた時に中身をクリアする美しい処理ですわ
-        private void DockPanel_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        private void Window_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
             // メニューが開いている最中（別名付与など）の「偽のMouseLeave」は完全に無視しますわ！
             if (_isContextMenuOpen) return;
@@ -228,7 +280,7 @@ namespace Kuro_DockLauncher2.Views
             // XAMLの代わりに、C#側からスライドアウトのアニメーションを命じます
             var anim = new System.Windows.Media.Animation.DoubleAnimation
             {
-                To = 95,
+                To = 99,
                 Duration = new System.Windows.Duration(System.TimeSpan.FromSeconds(0.3)),
                 EasingFunction = new System.Windows.Media.Animation.QuadraticEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn }
             };

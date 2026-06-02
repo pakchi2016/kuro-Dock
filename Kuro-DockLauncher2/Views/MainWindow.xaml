@@ -5,12 +5,11 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"
         Loaded="Window_Loaded"
-        >
-
+        MouseLeave="Window_MouseLeave">
     <Grid x:Name="DockPanel" HorizontalAlignment="Right" Background="#AA222222" Grid.Row="1" AllowDrop="True"
-          MouseLeave="DockPanel_MouseLeave"
           ContextMenuOpening="DockPanel_ContextMenuOpening"
           ContextMenuClosing="DockPanel_ContextMenuClosing">
+
         <Grid.RenderTransform>
             <TranslateTransform X="99"/>
         </Grid.RenderTransform>
@@ -60,25 +59,95 @@
             <ColumnDefinition Width="100"/>
         </Grid.ColumnDefinitions>
 
-        <ItemsControl Grid.Column="0" ItemsSource="{Binding CurrentSubBookmarks}" 
+        <ItemsControl x:Name="SubBookmarksPanel" Grid.Column="0" ItemsSource="{Binding CurrentSubBookmarks}" 
                       Background="#99000000"
                       Visibility="Visible">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Button Content="{Binding Name}" 
                             Width="150" Height="30" Margin="0,2,0,0"
-                            Background="#55000000" Foreground="White"
+                            Foreground="#DDDDDD" Cursor="Hand"
                             BorderBrush="#77FFFFFF" BorderThickness="1"
                             Click="Bookmark_Click"
                             Opacity="0">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="Border"
+                                        Background="#1A000000"
+                                        BorderBrush="#33FFFFFF"
+                                        BorderThickness="0,0,0,1"
+                                        CornerRadius="3">
+                                    
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border x:Name="Accent" Width="3" HorizontalAlignment="Left" Background="Transparent" CornerRadius="3,0,0,3" Grid.ColumnSpan="2"/>
+                                        <Image Grid.Column="0" 
+                                               Source="{Binding Icon}" 
+                                               Width="25" Height="25" 
+                                               Margin="10,0,0,0" 
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"/>
+                                        <TextBlock x:Name="Text"
+                                                   Text="{TemplateBinding Content}"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Left"
+                                                   Margin="38,0,8,0"
+                                                   FontSize="12"
+                                                   TextTrimming="CharacterEllipsis">
+                                            <TextBlock.RenderTransform>
+                                                <TranslateTransform x:Name="TextTransform" X="0"/>
+                                            </TextBlock.RenderTransform>
+                                        </TextBlock>
+                                    </Grid>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Border" Property="Background" Value="#33000000"/>
+                                        <Setter TargetName="Accent" Property="Background" Value="#00C3FF"/>
+                                        <Setter TargetName="Text" Property="Foreground" Value="White"/>
+                                        <Trigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="(TextBlock.RenderTransform).(TranslateTransform.X)" Storyboard.TargetName="Text" To="5" Duration="0:0:0.15" >
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <QuadraticEase EasingMode="EaseOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </Trigger.EnterActions>
+                                        <Trigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="(TextBlock.RenderTransform).(TranslateTransform.X)" Storyboard.TargetName="Text" To="0" Duration="0:0:0.25" >
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <QuadraticEase EasingMode="EaseOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </Trigger.ExitActions>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
                         <Button.RenderTransform>
-                            <TranslateTransform Y="-20"/>
+                            <TranslateTransform X="{Binding InitialOffsetX}" Y="{Binding InitialOffsetY}"/>
                         </Button.RenderTransform>
                         <Button.Triggers>
                             <EventTrigger RoutedEvent="Loaded">
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" To="0" Duration="0:0:0.15">
+                                            <DoubleAnimation.EasingFunction>
+                                                <QuadraticEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" To="0" Duration="0:0:0.15">
                                             <DoubleAnimation.EasingFunction>
                                                 <QuadraticEase EasingMode="EaseOut"/>
@@ -93,31 +162,92 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <ItemsControl Grid.Column="1" ItemsSource="{Binding CurrentBookmarks}" 
+        <ItemsControl x:Name="BookmarksPanel" Grid.Column="1" ItemsSource="{Binding CurrentBookmarks}" 
                       Background="#77111111"
                       Visibility="Visible">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Button Content="{Binding Name}" 
                             Width="150" Height="30" Margin="0,2,0,0"
-                            Background="#55000000" Foreground="White"
+                            MouseEnter="Bookmark_MouseEnter"  Foreground="#DDDDDD" Cursor="Hand"
                             BorderBrush="#77FFFFFF" BorderThickness="1"
                             Click="Bookmark_Click"
-                            MouseEnter="Bookmark_MouseEnter" 
                             Opacity="0">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="Border"
+                                        Background="#1A000000"
+                                        BorderBrush="#33FFFFFF"
+                                        BorderThickness="0,0,0,1"
+                                        CornerRadius="3">
+                                    <Grid>
+                                        <Border x:Name="Accent" Width="3" HorizontalAlignment="Left" Background="Transparent" CornerRadius="3,0,0,3"/>
+
+                                        <TextBlock x:Name="Text"
+                                                   Text="{TemplateBinding Content}"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Left"
+                                                   Margin="12,0,8,0"
+                                                   FontSize="12"
+                                                   TextTrimming="CharacterEllipsis">
+
+                                            <TextBlock.RenderTransform>
+                                                <TranslateTransform x:Name="TextTransform" X="0"/>
+                                            </TextBlock.RenderTransform>
+                                        </TextBlock>
+                                    </Grid>
+                                </Border>
+
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Border" Property="Background" Value="#33000000"/>
+                                        <Setter TargetName="Accent" Property="Background" Value="#00C3FF"/>
+                                        <Setter TargetName="Text" Property="Foreground" Value="White"/>
+
+                                        <Trigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="(TextBlock.RenderTransform).(TranslateTransform.X)" Storyboard.TargetName="Text" To="5" Duration="0:0:0.15" >
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <QuadraticEase EasingMode="EaseOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </Trigger.EnterActions>
+                                        <Trigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="(TextBlock.RenderTransform).(TranslateTransform.X)" Storyboard.TargetName="Text" To="0" Duration="0:0:0.25" >
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <QuadraticEase EasingMode="EaseOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </Trigger.ExitActions>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
                         <Button.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="名前を変更" Click="RenameBookmark_Click"/>
                             </ContextMenu>
                         </Button.ContextMenu>
                         <Button.RenderTransform>
-                            <TranslateTransform Y="-20"/>
+                            <TranslateTransform X="{Binding InitialOffsetX}" Y="{Binding InitialOffsetY}"/>
                         </Button.RenderTransform>
                         <Button.Triggers>
                             <EventTrigger RoutedEvent="Loaded">
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" To="0" Duration="0:0:0.15">
+                                            <DoubleAnimation.EasingFunction>
+                                                <QuadraticEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" To="0" Duration="0:0:0.15">
                                             <DoubleAnimation.EasingFunction>
                                                 <QuadraticEase EasingMode="EaseOut"/>
@@ -137,10 +267,34 @@
                 <DataTemplate>
                     <Button Content="{Binding Name}" 
                             Width="90" Height="30" Margin="0,2,0,0" HorizontalAlignment="Right"
-                            Background="#55000000" Foreground="White"
-                            BorderBrush="#77FFFFFF" BorderThickness="1"
                             AllowDrop="True" Drop="IndexButton_Drop"
-                            MouseEnter="IndexButton_MouseEnter"/>
+                            MouseEnter="IndexButton_MouseEnter"
+                            Foreground="#DDDDDD" Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="Border"
+                                        Background="#1AFFFFFF"
+                                        BorderBrush="#44FFFFFF"
+                                        BorderThickness="3,0,0,0"
+                                        CornerRadius="10,0,0,10">
+                                    <TextBlock x:Name="Text"
+                                               Text="{TemplateBinding Content}"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Right"
+                                               Margin="0,0,12,0"
+                                               FontWeight="SemiBold"
+                                               FontSize="13"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Border" Property="Background" Value="#33FFFFFF"/>
+                                        <Setter TargetName="Border" Property="BorderBrush" Value="#00C3FF"/>
+                                        <Setter TargetName="Text" Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>

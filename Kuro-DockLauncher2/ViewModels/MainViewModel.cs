@@ -73,7 +73,12 @@ namespace Kuro_DockLauncher2.ViewModels
         {
             try
             {
-                var options = new JsonSerializerOptions { WriteIndented = true };
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    // 日本語がユニコードエスケープされないようにエンコーダーを指定
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All)
+                };
                 string json = JsonSerializer.Serialize(IndexItems, options);
 
                 // 卿の指定通り、BOM付きのUTF-8で美しく保存して差し上げますわ

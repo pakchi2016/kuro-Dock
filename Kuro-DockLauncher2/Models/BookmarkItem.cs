@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace Kuro_DockLauncher2.Models
 {
@@ -47,6 +48,29 @@ namespace Kuro_DockLauncher2.Models
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private double _initialOffsetX = 0;
+        [JsonIgnore]
+        public double InitialOffsetX
+        {
+            get => _initialOffsetX;
+            set { _initialOffsetX = value; OnPropertyChanged(nameof(InitialOffsetX)); }
+        }
+
+        private double _initialOffsetY = -20;
+        [JsonIgnore]
+        public double InitialOffsetY
+        {
+            get => _initialOffsetY;
+            set { _initialOffsetY = value; OnPropertyChanged(nameof(InitialOffsetY)); }
+        }
+        private ImageSource _icon;
+        [JsonIgnore]
+        public ImageSource Icon
+        {
+            get => _icon;
+            set { _icon = value; OnPropertyChanged(nameof(Icon)); }
         }
     }
 }
