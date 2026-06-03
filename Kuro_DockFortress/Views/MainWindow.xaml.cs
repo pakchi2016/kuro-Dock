@@ -27,6 +27,7 @@ namespace Kuro_DockFortress.Views
                     if (listView.DataContext is TabItemModel tab)
                     {
                         tab.CurrentPath = file.Path;
+                        SyncTerminalPath(tab.CurrentPath);
                     }
                 }
                 else
@@ -427,5 +428,11 @@ namespace Kuro_DockFortress.Views
             }
         }
 
+        // ★ 16. ターミナルの現在地をUIと強制同期させるメソッドですわ
+        private void SyncTerminalPath(string path)
+        {
+            if (string.IsNullOrEmpty(path) || path == "PC") return;
+            BottomTerminal.ExecuteCommand($"cd \"{path}\"");
+        }
     }
 }
