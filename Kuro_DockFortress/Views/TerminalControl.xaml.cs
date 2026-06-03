@@ -8,7 +8,7 @@ using System.Windows.Input;
 
 namespace Kuro_DockFortress.Views
 {
-    public partial class TerminalControl : UserControl
+    public partial class TerminalControl : System.Windows.Controls.UserControl
     {
         private Process _process;
         private StreamWriter _streamWriter;
@@ -59,9 +59,9 @@ namespace Kuro_DockFortress.Views
         }
 
         // 卿がEnterを押した時、コマンドを裏のPowerShellに流し込みます
-        private void InputBox_KeyDown(object sender, KeyEventArgs e)
+        private void InputBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (e.Key == Key.Enter)
+            if (e.Key == System.Windows.Input.Key.Enter)
             {
                 string cmd = InputBox.Text;
                 if (string.IsNullOrWhiteSpace(cmd)) return;

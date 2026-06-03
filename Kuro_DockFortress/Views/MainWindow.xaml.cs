@@ -1,18 +1,23 @@
 ﻿using Kuro_DockFortress.Models;
 using Kuro_DockFortress.ViewModels;
+using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using System.Linq;
 
 namespace Kuro_DockFortress.Views
 {
     public partial class MainWindow : Window
     {
+        private System.Windows.Forms.NotifyIcon _notifyIcon;
+        private bool _isExplicitClose = false;
         public MainWindow()
         {
             InitializeComponent();
             this.DataContext = new MainViewModel(); // 紐付けの儀式ですわ
+
+            SetupNotifyIcon();
         }
 
         // ★ 1. リストの項目をダブルクリックした時の処理ですわ
@@ -61,9 +66,9 @@ namespace Kuro_DockFortress.Views
         }
 
         // ★ 3. パスバーで直接文字を打ち込み、Enterキーを押した時の処理ですわ
-        private void PathTextBox_KeyDown(object sender, KeyEventArgs e)
+        private void PathTextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (e.Key == Key.Enter)
+            if (e.Key == System.Windows.Input.Key.Enter)
             {
                 if (sender is System.Windows.Controls.TextBox tb && tb.Tag is TabItemModel tab)
                 {
@@ -134,7 +139,7 @@ namespace Kuro_DockFortress.Views
                     // Windowsのクリップボードが理解できる「ファイルのリスト」形式に変換して登録しますわ
                     var strCollection = new System.Collections.Specialized.StringCollection();
                     strCollection.Add(file.Path);
-                    Clipboard.SetFileDropList(strCollection);
+                    System.Windows.Clipboard.SetFileDropList(strCollection);
                 }
             }
         }
@@ -145,14 +150,14 @@ namespace Kuro_DockFortress.Views
             if (sender is System.Windows.Controls.MenuItem menuItem &&
                 menuItem.Parent is System.Windows.Controls.ContextMenu contextMenu &&
                 contextMenu.PlacementTarget is System.Windows.Controls.ListView listView &&
-                Clipboard.ContainsFileDropList() && listView.DataContext is TabItemModel tab)
+                System.Windows.Clipboard.ContainsFileDropList() && listView.DataContext is TabItemModel tab)
             {
                 string targetDir = tab.CurrentPath;
                 if (targetDir == "PC" || !Directory.Exists(targetDir)) return;
 
                 // クリップボードのデータが「切り取り」かどうかを魔術から判定しますわ
                 bool isCut = false;
-                var dataObj = Clipboard.GetDataObject();
+                var dataObj = System.Windows.Clipboard.GetDataObject();
                 if (dataObj != null && dataObj.GetDataPresent("Preferred DropEffect"))
                 {
                     if (dataObj.GetData("Preferred DropEffect") is MemoryStream ms)
@@ -162,7 +167,7 @@ namespace Kuro_DockFortress.Views
                     }
                 }
 
-                var files = Clipboard.GetFileDropList();
+                var files = System.Windows.Clipboard.GetFileDropList();
                 foreach (string sourcePath in files)
                 {
                     try
@@ -194,7 +199,7 @@ namespace Kuro_DockFortress.Views
                 }
 
                 // 切り取りだった場合は、二重貼り付けを防ぐためクリップボードを浄化します
-                if (isCut) Clipboard.Clear();
+                if (isCut) System.Windows.Clipboard.Clear();
 
                 tab.CurrentPath = targetDir;
             }
@@ -225,7 +230,7 @@ namespace Kuro_DockFortress.Views
             if (sender is System.Windows.Controls.ContextMenu menu)
             {
                 // クリップボードにファイルが存在するかどうかを判定します
-                bool hasFiles = Clipboard.ContainsFileDropList();
+                bool hasFiles = System.Windows.Clipboard.ContainsFileDropList();
 
                 foreach (object item in menu.Items)
                 {
@@ -249,14 +254,14 @@ namespace Kuro_DockFortress.Views
                 var strCollection = new System.Collections.Specialized.StringCollection { file.Path };
 
                 // ただのコピーではなく「切り取り（移動）」であることを示すWindowsの黒魔術です
-                var data = new DataObject();
+                var data = new System.Windows.DataObject();
                 data.SetFileDropList(strCollection);
 
                 byte[] moveEffect = new byte[] { 2, 0, 0, 0 }; // 2 = DROPEFFECT_MOVE
                 MemoryStream dropEffect = new MemoryStream(moveEffect);
                 data.SetData("Preferred DropEffect", dropEffect);
 
-                Clipboard.SetDataObject(data, true);
+                System.Windows.Clipboard.SetDataObject(data, true);
             }
         }
 
@@ -269,10 +274,10 @@ namespace Kuro_DockFortress.Views
                 listView.SelectedItem is FileItemModel file &&
                 listView.DataContext is TabItemModel tab)
             {
-                var result = MessageBox.Show($"本当に '{file.Name}' を削除してもよろしいですか？\n※ごみ箱には入らず完全に消去されますわよ。",
-                                             "削除の確認", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                var result = System.Windows.MessageBox.Show($"本当に '{file.Name}' を削除してもよろしいですか？\n※ごみ箱には入らず完全に消去されますわよ。",
+                                             "削除の確認", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
 
-                if (result == MessageBoxResult.Yes)
+                if (result == System.Windows.MessageBoxResult.Yes)
                 {
                     try
                     {
@@ -284,7 +289,7 @@ namespace Kuro_DockFortress.Views
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"削除に失敗しましたわ: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                        System.Windows.MessageBox.Show($"削除に失敗しましたわ: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                     }
                 }
             }
@@ -433,6 +438,60 @@ namespace Kuro_DockFortress.Views
         {
             if (string.IsNullOrEmpty(path) || path == "PC") return;
             BottomTerminal.ExecuteCommand($"cd \"{path}\"");
+        }
+
+        private void SetupNotifyIcon()
+        {
+            _notifyIcon = new System.Windows.Forms.NotifyIcon();
+
+            // 実行ファイル自身のアイコンを抽出してタスクトレイに表示させますわ
+            _notifyIcon.Icon = System.Drawing.Icon.ExtractAssociatedIcon(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            _notifyIcon.Text = "Kuro-DockFortress";
+            _notifyIcon.Visible = true;
+
+            // アイコンをダブルクリックした際も表示させます
+            _notifyIcon.DoubleClick += (s, e) => ShowWindow();
+
+            // 右クリックメニューの構築です
+            var contextMenu = new System.Windows.Forms.ContextMenuStrip();
+
+            var showItem = new System.Windows.Forms.ToolStripMenuItem("表示");
+            showItem.Click += (s, e) => ShowWindow();
+
+            var exitItem = new System.Windows.Forms.ToolStripMenuItem("終了");
+            exitItem.Click += (s, e) =>
+            {
+                // 真の終了フラグを立て、アイコンを片付けてから要塞を完全に沈めます
+                _isExplicitClose = true;
+                _notifyIcon.Dispose();
+                System.Windows.Application.Current.Shutdown();
+            };
+
+            contextMenu.Items.Add(showItem);
+            contextMenu.Items.Add(exitItem);
+            _notifyIcon.ContextMenuStrip = contextMenu;
+        }
+
+        // ★ 要塞を最前面に浮上させる処理ですわ
+        private void ShowWindow()
+        {
+            this.Show();
+            if (this.WindowState == WindowState.Minimized)
+            {
+                this.WindowState = WindowState.Normal;
+            }
+            this.Activate(); // 最前面に持ってくる絶対命令です
+        }
+
+        // ★ 「×」ボタンが押された時の処理ですわ
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            // タスクトレイからの「終了」以外は、すべて「隠す」処理にすり替えます
+            if (!_isExplicitClose)
+            {
+                e.Cancel = true; // 終了処理をキャンセル（無効化）します
+                this.Hide();     // 姿を消しますわ
+            }
         }
     }
 }
