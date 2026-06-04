@@ -3,4 +3,5 @@
     <BuildType Project="Release" />
   </Project>
   <Project Path="Kuro_DockFortress/Kuro_DockFortress.csproj" Id="ffb4c84c-2b9a-4aba-9d8f-be140c1e0708" />
+  <Project Path="Kuro_DockHex/Kuro_DockHex.csproj" Id="bdd87843-9b95-49f1-85d7-5088af9ed933" />
 </Solution>

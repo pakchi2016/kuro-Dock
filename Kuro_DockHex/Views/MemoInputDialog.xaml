@@ -1,0 +1,41 @@
+﻿<Window x:Class="Kuro_DockHex.Views.MemoInputDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ルーンの刻印" Height="280" Width="400"
+        Background="#1E1E1E" Foreground="#D4D4D4"
+        WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="タスク（メモ）の内容：" Margin="0,0,0,5" Foreground="#A0A0A0"/>
+        <TextBox x:Name="TextBox_Text" Grid.Row="1" Background="#2D2D30" Foreground="White" 
+                 BorderThickness="1" BorderBrush="#8E44AD" TextWrapping="Wrap" AcceptsReturn="True"
+                 Padding="4"/>
+
+        <TextBlock Grid.Row="2" Text="期限 (空欄可)：" Margin="0,15,0,5" Foreground="#A0A0A0"/>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal">
+            <DatePicker x:Name="DatePicker_Date" Width="140" Height="26" 
+                        Background="#2D2D30" BorderBrush="#8E44AD" />
+
+            <TextBlock Text="時刻:" Margin="15,0,5,0" Foreground="#A0A0A0" VerticalAlignment="Center"/>
+
+            <TextBox x:Name="TextBox_Time" Width="80" Height="26" Background="#2D2D30" Foreground="White" 
+                     BorderThickness="1" BorderBrush="#8E44AD" VerticalContentAlignment="Center" Padding="4,0"
+                     ToolTip="例: 15:00"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="刻印 (OK)" Width="80" Height="26" Background="#8E44AD" Foreground="White" 
+                    BorderThickness="0" Cursor="Hand" Click="OkButton_Click" IsDefault="True"/>
+            <Button Content="破棄 (Cancel)" Width="80" Height="26" Margin="10,0,0,0" Background="#3E3E42" 
+                    Foreground="White" BorderThickness="0" Cursor="Hand" Click="CancelButton_Click" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>
