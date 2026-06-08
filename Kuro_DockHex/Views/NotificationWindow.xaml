@@ -1,0 +1,39 @@
+﻿<Window x:Class="Kuro_DockHex.Views.NotificationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="魔導通知" Height="140" Width="300"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" Loaded="Window_Loaded">
+
+    <Grid>
+        <Border Background="#1E1E1E" BorderBrush="#8E44AD" BorderThickness="2" CornerRadius="8">
+            <Border.Effect>
+                <DropShadowEffect Color="#8E44AD" BlurRadius="15" ShadowDepth="0" Opacity="0.6"/>
+            </Border.Effect>
+
+            <Grid Margin="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="◆ 時が満ちました ◆" Foreground="#8E44AD" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
+
+                <TextBlock x:Name="TextBlock_Text" Grid.Row="1" Foreground="#E0E0E0" FontSize="13" 
+                           TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="Meiryo"/>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="10分延長" Width="65" Height="22" Background="#2D2D30" Foreground="#A0A0A0" 
+                            BorderBrush="#8E44AD" BorderThickness="1" Cursor="Hand" Click="SnoozeButton_Click" Margin="0,0,10,0"/>
+
+                    <Button Content="完了" Width="60" Height="22" Background="#27AE60" Foreground="White" 
+                            BorderThickness="0" Cursor="Hand" Click="CompleteButton_Click" Margin="0,0,10,0"/>
+
+                    <Button Content="了解" Width="60" Height="22" Background="#8E44AD" Foreground="White" 
+                            BorderThickness="0" Cursor="Hand" Click="CloseButton_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

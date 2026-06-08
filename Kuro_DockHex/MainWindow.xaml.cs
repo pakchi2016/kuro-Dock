@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Kuro_DockHex.Models;
+using Kuro_DockHex.ViewModels;
+using System;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
-using Kuro_DockHex.Models;
-using Kuro_DockHex.ViewModels;
+using System.Windows.Threading;
 
 namespace Kuro_DockHex
 {
@@ -12,6 +14,7 @@ namespace Kuro_DockHex
         // ★ 待機位置と完全表示位置を記憶するための変数ですわ
         private double _targetTop;
         private double _hiddenTop;
+        private DispatcherTimer _alarmTimer;
 
         private System.Windows.Forms.NotifyIcon _notifyIcon;
 
@@ -20,6 +23,7 @@ namespace Kuro_DockHex
             InitializeComponent();
             this.DataContext = new ViewModels.MainViewModel();
             SetupNotifyIcon();
+            SetupAlarmTimer();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -126,5 +130,130 @@ namespace Kuro_DockHex
 
             _notifyIcon.ContextMenuStrip = contextMenu;
         }
+
+        // ★ 新設：タスクを完了（削除）する際の儀式です
+        private void DeleteMemo_Click(object sender, RoutedEventArgs e)
+        {
+            // 1. クリックされたメニュー項目(MenuItem)を捕捉します
+            if (sender is System.Windows.Controls.MenuItem menuItem)
+            {
+                // 2. そのメニューを統括している親(ContextMenu)を捕捉します
+                if (menuItem.Parent is System.Windows.Controls.ContextMenu contextMenu)
+                {
+                    // 3. そのメニューが「どこから開かれたか(PlacementTarget = Border)」を捕捉し、
+                    //    そこからようやく、対象のルーン(MemoItemModel)を引きずり出しますわ！
+                    if (contextMenu.PlacementTarget is FrameworkElement placementTarget &&
+                        placementTarget.DataContext is Models.MemoItemModel memo)
+                    {
+                        if (this.DataContext is ViewModels.MainViewModel vm)
+                        {
+                            // 1. まず、消え去る前に歴史（CSV）へと刻み込みます
+                            Helpers.MemoManager.ArchiveToCsv(memo);
+
+                            // 2. 魔法陣（UIとViewModel）から対象のルーンを消去します
+                            vm.Memos.Remove(memo);
+
+                            // 3. 現在の魔法陣の状態を直ちにJSONへと上書き保存しますわ
+                            Helpers.MemoManager.Save(vm.Memos);
+                        }
+                    }
+                }
+            }
+        }
+
+        // ★ 新設：タスク上での右クリックが、Grid（追加ダイアログ）へ伝播するのを防ぎますわ
+        private void MemoBorder_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            // これでイベントの「バブリング（浮上）」が止まり、タスク専用のメニューだけが平和に開かれます
+            e.Handled = true;
+
+            if (sender is Border border && border.ContextMenu != null)
+            {
+                border.ContextMenu.PlacementTarget = border;
+                border.ContextMenu.IsOpen = true; // メニューを開けという絶対命令です
+            }
+        }
+        private void SetupAlarmTimer()
+        {
+            _alarmTimer = new DispatcherTimer();
+            _alarmTimer.Interval = TimeSpan.FromSeconds(1); // 1秒ごとに実行
+            _alarmTimer.Tick += AlarmTimer_Tick;
+            _alarmTimer.Start();
+            AlarmTimer_Tick(null, EventArgs.Empty);
+        }
+
+        // ★ 毎秒実行される監視の儀式ですわ
+        private void AlarmTimer_Tick(object? sender, EventArgs e)
+        {
+            if (this.DataContext is ViewModels.MainViewModel vm)
+            {
+                DateTime now = DateTime.Now;
+                bool isStateChanged = false;
+
+                foreach (var memo in vm.Memos)
+                {
+                    // 期限が設定されており、現在時刻がそれを過ぎており、かつ「まだ通知していない」場合を狙撃します
+                    if (memo.TargetDate.HasValue && now >= memo.TargetDate.Value && !memo.IsNotified)
+                    {
+                        memo.UpdateUrgency();
+                        memo.IsNotified = true; // 二度鳴り防止の刻印
+                        isStateChanged = true;
+                        var targetMemo = memo;
+
+                        // 通知ウィンドウをこの世界に具現化（召喚）しますわ！
+                        var notifyWindow = new Views.NotificationWindow(
+                            targetMemo,
+                            () => Helpers.MemoManager.Save(vm.Memos),
+                            () => {
+                                // 1. CSVファイル（歴史書）へ追記
+                                Helpers.MemoManager.ArchiveToCsv(targetMemo);
+                                // 2. 魔法陣の一覧から削除
+                                vm.Memos.Remove(targetMemo);
+                                // 3. 最新の状態をJSONへ上書き保存
+                                Helpers.MemoManager.Save(vm.Memos);
+                            }
+                        );
+                        notifyWindow.Show();
+                    }
+                }
+
+                // 1つでも通知済みに変化したなら、その状態を直ちにJSONへ永続化します
+                if (isStateChanged)
+                {
+                    Helpers.MemoManager.Save(vm.Memos);
+                }
+            }
+        }
+        private void MemoBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2) // クリック2回（ダブルクリック）を厳密に検知します
+            {
+                e.Handled = true; // 親（Grid）への伝播を遮断し、不要な暴発を防ぎます
+
+                if (sender is FrameworkElement fe && fe.DataContext is Models.MemoItemModel memo)
+                {
+                    // 先ほど作った「記憶を引き継ぐコンストラクタ」でダイアログを召喚します
+                    var dialog = new Views.MemoInputDialog(memo.Text, memo.TargetDate);
+                    dialog.Topmost = true;
+
+                    if (dialog.ShowDialog() == true)
+                    {
+                        // 変更内容をルーンに上書きします
+                        memo.Text = dialog.MemoText;
+                        memo.TargetDate = dialog.TargetDate;
+
+                        // 時間や内容が変わったため、過去の通知フラグを白紙に戻します
+                        memo.IsNotified = false;
+
+                        // JSON（歴史）へ新たな姿を上書き保存します
+                        if (this.DataContext is ViewModels.MainViewModel vm)
+                        {
+                            Helpers.MemoManager.Save(vm.Memos);
+                        }
+                    }
+                }
+            }
+        }
+
     }
 }

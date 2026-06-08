@@ -20,8 +20,15 @@
             <ItemsControl ItemsSource="{Binding Memos}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border BorderBrush="#8E44AD" BorderThickness="1" Background="#11FFFFFF" 
-                                CornerRadius="4" Margin="0,0,0,8" Padding="8">
+                        <Border BorderBrush="{Binding UrgencyColor}" BorderThickness="2" Background="#11FFFFFF" 
+                                CornerRadius="4" Margin="0,0,0,8" Padding="8"
+                                MouseRightButtonUp="MemoBorder_MouseRightButtonUp"
+                                MouseLeftButtonDown="MemoBorder_MouseLeftButtonDown">
+                            <Border.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="タスク完了 (アーカイブして削除)" Click="DeleteMemo_Click"/>
+                                </ContextMenu>
+                            </Border.ContextMenu>
                             <StackPanel>
                                 <TextBlock Text="{Binding Text}" Foreground="#E0E0E0" TextWrapping="Wrap" 
                                            FontFamily="Meiryo" FontSize="12" Margin="0,0,0,5"/>

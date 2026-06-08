@@ -65,5 +65,23 @@ namespace Kuro_DockHex.Views
         {
             this.DialogResult = false;
         }
+
+        public MemoInputDialog(string currentText, DateTime? currentDate) : this() // : this() で基本の初期化を先に走らせます
+        {
+            TextBox_Text.Text = currentText; // 既存のテキストを流し込みます
+
+            if (currentDate.HasValue)
+            {
+                // 既存の日時がある場合は、カレンダーと時刻枠にセットします
+                DatePicker_Date.SelectedDate = currentDate.Value.Date;
+                TextBox_Time.Text = currentDate.Value.ToString("HH:mm");
+            }
+            else
+            {
+                // 期限なしの場合は空欄に戻します
+                DatePicker_Date.SelectedDate = null;
+                TextBox_Time.Text = "";
+            }
+        }
     }
 }
