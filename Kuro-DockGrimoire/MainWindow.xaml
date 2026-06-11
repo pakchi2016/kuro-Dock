@@ -55,7 +55,7 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Button Style="{StaticResource MenuItemStyle}" 
-                                                    Content="{Binding Name}" 
+                                                    Content="{Binding DisplayName}" 
                                                     Click="BookmarkButton_Click"
                                                     HorizontalAlignment="Stretch"/>
                                         </DataTemplate>

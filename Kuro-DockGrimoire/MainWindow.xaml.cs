@@ -79,8 +79,8 @@ namespace Kuro_DockGrimoire
                         Name = "📁 システム領域",
                         Bookmarks = new List<BookmarkModel>
                         {
-                            new BookmarkModel { Name = "◆ Cドライブ", Path = @"C:\" },
-                            new BookmarkModel { Name = "◆ ドキュメント", Path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) }
+                            new BookmarkModel { Alias = "◆ Cドライブ", Path = @"C:\" },
+                            new BookmarkModel { Alias = "◆ ドキュメント", Path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) }
                         }
                     }
                 };
@@ -124,15 +124,34 @@ namespace Kuro_DockGrimoire
         {
             if (App.TargetExplorerHwnd == IntPtr.Zero) return;
 
-            ShellWindows shellWindows = new ShellWindows();
-            foreach (InternetExplorer ie in shellWindows)
+            // ★ 新設：転移先が現実世界に存在するか確認する防壁ですわ
+            if (!Directory.Exists(targetPath) && !File.Exists(targetPath))
             {
-                if (new IntPtr((long)ie.HWND) == App.TargetExplorerHwnd)
+                MessageBox.Show($"指定された座標は既にこの世界から消失していますわ。\n{targetPath}",
+                                "Kuro-Dock Grimoire - 転移失敗", MessageBoxButton.OK, MessageBoxImage.Warning);
+                this.Close(); // 失敗を告げた後、美しく姿を消します
+                return;
+            }
+
+            try
+            {
+                ShellWindows shellWindows = new ShellWindows();
+                foreach (InternetExplorer ie in shellWindows)
                 {
-                    ie.Navigate(targetPath);
-                    break;
+                    if (new IntPtr((long)ie.HWND) == App.TargetExplorerHwnd)
+                    {
+                        ie.Navigate(targetPath);
+                        break;
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                // COMオブジェクトとの通信で予期せぬ切断が起きた場合の最終防壁です
+                MessageBox.Show($"転移魔術の詠唱中に未知の妨害を受けましたわ:\n{ex.Message}",
+                                "Kuro-Dock Grimoire - 致命的例外", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
             this.Close();
         }
 
