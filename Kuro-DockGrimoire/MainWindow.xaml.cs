@@ -1,7 +1,4 @@
 ﻿using Kuro_DockGrimoire.Models;
-using SHDocVw;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -17,6 +14,7 @@ namespace Kuro_DockGrimoire
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool GetCursorPos(ref Win32Point pt);
+        private bool _isClosing = false;
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct Win32Point
@@ -50,7 +48,7 @@ namespace Kuro_DockGrimoire
         // ★ メニューがクリックされた時の転移発動です
         private void BookmarkButton_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.DataContext is BookmarkModel bookmark)
+            if (sender is System.Windows.Controls.Button btn && btn.DataContext is BookmarkModel bookmark)
             {
                 NavigateExplorer(bookmark.Path);
             }
@@ -110,14 +108,14 @@ namespace Kuro_DockGrimoire
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"法典の読み込みに失敗しましたわ: {ex.Message}", "Kuro-Dock Grimoire", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show($"法典の読み込みに失敗しましたわ: {ex.Message}", "Kuro-Dock Grimoire", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         // ★ コンテキストメニューの基本：別の場所がクリックされたら即座に消滅します
         private void Window_Deactivated(object sender, EventArgs e)
         {
-            this.Close();
+            SafeClose(); // 修正：this.Close() から置き換えます
         }
 
         private void NavigateExplorer(string targetPath)
@@ -127,32 +125,39 @@ namespace Kuro_DockGrimoire
             // ★ 新設：転移先が現実世界に存在するか確認する防壁ですわ
             if (!Directory.Exists(targetPath) && !File.Exists(targetPath))
             {
-                MessageBox.Show($"指定された座標は既にこの世界から消失していますわ。\n{targetPath}",
+                System.Windows.MessageBox.Show($"指定された座標は既にこの世界から消失していますわ。\n{targetPath}",
                                 "Kuro-Dock Grimoire - 転移失敗", MessageBoxButton.OK, MessageBoxImage.Warning);
-                this.Close(); // 失敗を告げた後、美しく姿を消します
+                SafeClose();
                 return;
             }
 
             try
             {
-                ShellWindows shellWindows = new ShellWindows();
-                foreach (InternetExplorer ie in shellWindows)
+                // ★ COM参照を捨て、OSから直接「Shell.Application」を動的に召喚します
+                Type shellAppType = Type.GetTypeFromProgID("Shell.Application");
+                if (shellAppType != null)
                 {
-                    if (new IntPtr((long)ie.HWND) == App.TargetExplorerHwnd)
+                    dynamic shell = Activator.CreateInstance(shellAppType);
+                    dynamic windows = shell.Windows();
+
+                    foreach (dynamic ie in windows)
                     {
-                        ie.Navigate(targetPath);
-                        break;
+                        if (ie != null && new IntPtr((long)ie.HWND) == App.TargetExplorerHwnd)
+                        {
+                            ie.Navigate(targetPath);
+                            break;
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
-                // COMオブジェクトとの通信で予期せぬ切断が起きた場合の最終防壁です
-                MessageBox.Show($"転移魔術の詠唱中に未知の妨害を受けましたわ:\n{ex.Message}",
+                // COMオブジェクトとの通信で予期せぬエラーが起きた場合の最終防壁です
+                System.Windows.MessageBox.Show($"転移魔術の詠唱中に未知の妨害を受けましたわ:\n{ex.Message}",
                                 "Kuro-Dock Grimoire - 致命的例外", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
-            this.Close();
+            SafeClose();
         }
 
         // ★ 新設：テストボタンが押された時のトリガーです
@@ -161,5 +166,23 @@ namespace Kuro_DockGrimoire
             // 仮の転移先として、問答無用で「C:\」を指定してみますわ
             NavigateExplorer(@"C:\");
         }
+
+        // ★ 新設：App（タスクトレイ）から呼び出される再読み込みの窓口ですわ
+        public void Reload法典()
+        {
+            // すでに構築済みの LoadBookmarks を再実行するだけですわね。実にかんたんです
+            LoadBookmarks();
+        }
+
+        private void SafeClose()
+        {
+            if (!_isClosing)
+            {
+                _isClosing = true;
+                this.Close();
+            }
+        }
+
+
     }
 }
