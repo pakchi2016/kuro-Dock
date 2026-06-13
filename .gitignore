@@ -21,3 +21,9 @@
 /Kuro-DockGenesis/obj
 /Kuro-DockGrimoire/bin/Debug/net10.0-windows
 /Kuro-DockGrimoire/obj
+/Kuro-DockGrimoire/bin/Release/net10.0-windows
+/Kuro-DockGrimoire/Properties/PublishProfiles
+/Kuro-DockScroll/bin/Release/net10.0-windows/win-x64/native
+/Kuro-DockScroll/bin/Release/net10.0-windows/win-x64/publish
+/Kuro-DockScroll/bin/Release/net10.0-windows/win-x64
+/Kuro-DockScroll/obj
