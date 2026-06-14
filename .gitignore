@@ -27,3 +27,8 @@
 /Kuro-DockScroll/bin/Release/net10.0-windows/win-x64/publish
 /Kuro-DockScroll/bin/Release/net10.0-windows/win-x64
 /Kuro-DockScroll/obj
+/Kuro-DockGenesis/bin/Release/net10.0-windows
+/Kuro-DockGenesis/Properties/PublishProfiles
+/Kuro-DockThrone.Core/bin/Debug/net10.0-windows
+/Kuro-DockThrone.Core/bin/Release/net10.0-windows
+/Kuro-DockThrone.Core/obj
