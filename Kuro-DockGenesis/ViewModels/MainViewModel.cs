@@ -2,9 +2,12 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Kuro_DockGenesis.Models;
+using Kuro_DockThrone.Core.Models;
+using Kuro_DockThrone.Core.Storage;
 
 namespace Kuro_DockGenesis.ViewModels
 {
@@ -51,21 +54,30 @@ namespace Kuro_DockGenesis.ViewModels
 
         private void LoadConfiguration()
         {
-            if (!File.Exists(ConfigFileName)) return;
-
             try
             {
-                string json = File.ReadAllText(ConfigFileName);
-                var items = JsonSerializer.Deserialize<ObservableCollection<IndexItem>>(json);
-                if (items != null)
-                {
-                    IndexItems = items;
-                }
+                // 1. 玉座（Throne.Core）から、すべての魔導具で共通の純粋なデータを読み込みます
+                var coreData = ThroneStorage.LoadBookmarks();
+
+                // 2. それを Genesis の画面表示用モデル（アニメーション用プロパティを持つモデル）へ美しく変換します
+                IndexItems = new ObservableCollection<Kuro_DockGenesis.Models.IndexItem>(
+                    coreData.Select(coreIndex => new Kuro_DockGenesis.Models.IndexItem
+                    {
+                        Name = coreIndex.Name,
+                        Bookmarks = new ObservableCollection<Kuro_DockGenesis.Models.BookmarkItem>(
+                            coreIndex.Bookmarks.Select(coreBookmark => new Kuro_DockGenesis.Models.BookmarkItem
+                            {
+                                Alias = coreBookmark.Alias,
+                                Path = coreBookmark.Path
+                            })
+                        )
+                    })
+                );
             }
             catch (Exception ex)
             {
-                // 読み込み失敗時は空のリストから始めますわ
-                System.Diagnostics.Debug.WriteLine($"読み込みエラー: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"玉座からの読み込みエラー: {ex.Message}");
+                IndexItems = new ObservableCollection<Kuro_DockGenesis.Models.IndexItem>();
             }
         }
 
@@ -73,20 +85,23 @@ namespace Kuro_DockGenesis.ViewModels
         {
             try
             {
-                var options = new JsonSerializerOptions
+                // 1. Genesis の画面用モデルから、玉座へ献上するための「純粋なデータモデル」へ逆変換します
+                var coreData = IndexItems.Select(uiIndex => new Kuro_DockThrone.Core.Models.IndexModel
                 {
-                    WriteIndented = true,
-                    // 日本語がユニコードエスケープされないようにエンコーダーを指定
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All)
-                };
-                string json = JsonSerializer.Serialize(IndexItems, options);
+                    Name = uiIndex.Name,
+                    Bookmarks = uiIndex.Bookmarks.Select(uiBookmark => new Kuro_DockThrone.Core.Models.BookmarkModel
+                    {
+                        Alias = uiBookmark.Alias,
+                        Path = uiBookmark.Path
+                    }).ToList()
+                }).ToList();
 
-                // 卿の指定通り、BOM付きのUTF-8で美しく保存して差し上げますわ
-                File.WriteAllText(ConfigFileName, json, new UTF8Encoding(true));
+                // 2. 玉座の書記官に、共通法典（shared_bookmarks.json）への書き込みを委ねます
+                ThroneStorage.SaveBookmarks(coreData);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"保存エラー: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"玉座への保存エラー: {ex.Message}");
             }
         }
         public void Save() => SaveConfiguration();

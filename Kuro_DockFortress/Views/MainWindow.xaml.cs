@@ -1,5 +1,6 @@
 ﻿using Kuro_DockFortress.Models;
 using Kuro_DockFortress.ViewModels;
+using Kuro_DockThrone.Core.Models;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -382,11 +383,24 @@ namespace Kuro_DockFortress.Views
             {
                 if (tab.CurrentPath == "PC") return; // PC画面は登録不可です
 
-                // 既に同じパスが登録されていないか確認します
-                if (!vm.Bookmarks.Any(b => b.Path == tab.CurrentPath))
+                vm.ReloadBookmarks(); // 登録直前に最新の法典を取得し、競合を防ぎます
+                if (vm.CoreBookmarks == null || vm.CoreBookmarks.Count == 0) return;
+
+                // 階層構造のため、とりあえず「一番上のインデックス（システム領域等）」に登録しますわ
+                var targetIndex = vm.CoreBookmarks[0];
+
+                // 既にエコシステム全体で同じパスが登録されていないか確認します
+                bool exists = false;
+                foreach (var index in vm.CoreBookmarks)
                 {
-                    vm.Bookmarks.Add(new BookmarkItemModel { Name = tab.Header, Path = tab.CurrentPath });
-                    Helpers.BookmarkManager.Save(vm.Bookmarks);
+                    if (index.Bookmarks.Any(b => b.Path == tab.CurrentPath)) exists = true;
+                }
+
+                if (!exists)
+                {
+                    // AliasではなくDisplayName側で補完されるよう、スマートに登録しますわ
+                    targetIndex.Bookmarks.Add(new BookmarkModel { Alias = tab.Header, Path = tab.CurrentPath });
+                    vm.SaveBookmarks();
                 }
             }
         }
@@ -396,35 +410,52 @@ namespace Kuro_DockFortress.Views
         {
             if (sender is System.Windows.Controls.Button btn && btn.Tag is TabItemModel tab && this.DataContext is MainViewModel vm)
             {
-                // 動的にメニューを生成しますわ（App.xamlの掟に従うため美しく黒くなります）
+                // ★ 展開する「その瞬間」に玉座から法典を読み込みます！
+                // これにより、Genesis等で編集した結果が「再起動なし」で即座にメニューに反映されますわ！
+                vm.ReloadBookmarks();
                 var menu = new System.Windows.Controls.ContextMenu();
 
-                if (vm.Bookmarks.Count == 0)
+                if (vm.CoreBookmarks == null || vm.CoreBookmarks.Count == 0)
                 {
                     menu.Items.Add(new System.Windows.Controls.MenuItem { Header = "ブックマークは空ですわ", IsEnabled = false });
                 }
                 else
                 {
-                    foreach (var bm in vm.Bookmarks.ToList())
+                    // インデックス（親フォルダ）ごとにメニューを生成します
+                    foreach (var index in vm.CoreBookmarks)
                     {
-                        var item = new System.Windows.Controls.MenuItem { Header = bm.Name };
+                        var parentItem = new System.Windows.Controls.MenuItem { Header = index.Name };
 
-                        // ① 左クリック：そのパスへ移動します
-                        item.Click += (s, args) =>
+                        foreach (var bm in index.Bookmarks.ToList())
                         {
-                            if (Directory.Exists(bm.Path)) tab.CurrentPath = bm.Path;
-                        };
+                            // Aliasが空でも美しく表示される玉座の DisplayName プロパティを使いますわ
+                            var childItem = new System.Windows.Controls.MenuItem { Header = bm.DisplayName };
 
-                        // ② 右クリック：そのブックマークを削除します（わざわざ管理画面を作る手間を省くスマートな設計ですわ）
-                        item.MouseRightButtonUp += (s, args) =>
+                            // ① 左クリック：そのパスへ移動します
+                            childItem.Click += (s, args) =>
+                            {
+                                if (Directory.Exists(bm.Path)) tab.CurrentPath = bm.Path;
+                            };
+
+                            // ② 右クリック：そのブックマークを削除します
+                            childItem.MouseRightButtonUp += (s, args) =>
+                            {
+                                index.Bookmarks.Remove(bm);
+                                vm.SaveBookmarks();
+                                menu.IsOpen = false;
+                                args.Handled = true;
+                            };
+
+                            parentItem.Items.Add(childItem);
+                        }
+
+                        // インデックスの中身が空だった場合の美しい配慮ですわ
+                        if (parentItem.Items.Count == 0)
                         {
-                            vm.Bookmarks.Remove(bm);
-                            Helpers.BookmarkManager.Save(vm.Bookmarks);
-                            menu.IsOpen = false;
-                            args.Handled = true;
-                        };
+                            parentItem.Items.Add(new System.Windows.Controls.MenuItem { Header = "空ですわ", IsEnabled = false });
+                        }
 
-                        menu.Items.Add(item);
+                        menu.Items.Add(parentItem);
                     }
                 }
 
@@ -446,7 +477,7 @@ namespace Kuro_DockFortress.Views
 
             // 実行ファイル自身のアイコンを抽出してタスクトレイに表示させますわ
             _notifyIcon.Icon = System.Drawing.Icon.ExtractAssociatedIcon(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            _notifyIcon.Text = "Kuro-DockFortress";
+            _notifyIcon.Text = "Fortress";
             _notifyIcon.Visible = true;
 
             // アイコンをダブルクリックした際も表示させます

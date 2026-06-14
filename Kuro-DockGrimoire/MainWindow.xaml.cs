@@ -1,10 +1,10 @@
-﻿using Kuro_DockGrimoire.Models;
-using System.IO;
+﻿using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
-using System.Windows.Controls;
+using Kuro_DockThrone.Core.Models;
+using Kuro_DockThrone.Core.Storage;
 
 namespace Kuro_DockGrimoire
 {
@@ -56,59 +56,17 @@ namespace Kuro_DockGrimoire
 
         private void LoadBookmarks()
         {
-            // 1. 全アプリ共通の聖域（%APPDATA%\Kuro-Dock）のパスを特定します
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string kuroDockDir = Path.Combine(appDataPath, "Kuro-Dock");
-            string jsonPath = Path.Combine(kuroDockDir, "shared_bookmarks.json");
-
-            // 2. フォルダが存在しなければ、新たに領地を開拓します
-            if (!Directory.Exists(kuroDockDir))
-            {
-                Directory.CreateDirectory(kuroDockDir);
-            }
-
-            // 3. 法典（JSON）が存在しない場合は、2階層の初期データを錬成します
-            if (!File.Exists(jsonPath))
-            {
-                var defaultData = new List<IndexModel>
-                {
-                    new IndexModel
-                    {
-                        Name = "📁 システム領域",
-                        Bookmarks = new List<BookmarkModel>
-                        {
-                            new BookmarkModel { Alias = "◆ Cドライブ", Path = @"C:\" },
-                            new BookmarkModel { Alias = "◆ ドキュメント", Path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) }
-                        }
-                    }
-                };
-
-                // 卿の確立した、日本語を美しく保つためのエンコード魔法ですわ
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All)
-                };
-
-                string jsonString = JsonSerializer.Serialize(defaultData, options);
-                File.WriteAllText(jsonPath, jsonString, new System.Text.UTF8Encoding(true));
-            }
-
-            // 4. 法典の解読（デシリアライズ）を実行し、魔法陣（UI）へ注ぎ込みます
             try
             {
-                string jsonContent = File.ReadAllText(jsonPath);
+                // ★ JSONの存在確認からパスの解決、解読まですべてを玉座の書記官に委ねます
+                var multiLevelData = ThroneStorage.LoadBookmarks();
 
-                var readOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
-                // ★ 修正：フラットなListから、2階層の List<IndexModel> へと解読の規格を変更しましたわ
-                var multiLevelData = JsonSerializer.Deserialize<List<IndexModel>>(jsonContent, readOptions);
-
+                // 解読された知識を魔法陣（UI）へと注ぎ込みます
                 ItemsControl_Indexes.ItemsSource = multiLevelData;
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"法典の読み込みに失敗しましたわ: {ex.Message}", "Kuro-Dock Grimoire", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show(ex.Message, "Kuro-Dock Grimoire - 法典エラー", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

@@ -1,7 +1,9 @@
 ﻿using System.Windows;
 using System.Linq;
-using Kuro_DockGenesis.Models;
 using Kuro_DockGenesis.ViewModels;
+using Kuro_DockGenesis.Models;
+using Kuro_DockThrone.Core.Models;
+using Kuro_DockThrone.Core.Storage;
 
 
 namespace Kuro_DockGenesis.Views

@@ -14,6 +14,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Kuro-DockThrone.Core\Kuro-DockThrone.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Assets\kuro.png" />
   </ItemGroup>
 
