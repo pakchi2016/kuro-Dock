@@ -32,3 +32,5 @@
 /Kuro-DockThrone.Core/bin/Debug/net10.0-windows
 /Kuro-DockThrone.Core/bin/Release/net10.0-windows
 /Kuro-DockThrone.Core/obj
+/Kuro-DockThrone.Hub/obj
+/Kuro-DockThrone.Hub/bin/Debug/net10.0-windows
