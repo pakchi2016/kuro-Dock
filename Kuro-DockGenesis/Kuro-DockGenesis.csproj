@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Kuro-DockThrone.Core\Kuro-DockThrone.Core.csproj" />
-    <Resource Include="Images\kuro.png" />
     <Compile Update="Views\IndexWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

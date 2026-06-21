@@ -5,6 +5,9 @@
     <Compile Update="Views\InputDialog.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\PsPlusEditorWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\TerminalControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

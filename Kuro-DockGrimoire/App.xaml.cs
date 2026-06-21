@@ -4,8 +4,8 @@ using System.IO;
 using System.IO.Pipes;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms;
 using Application = System.Windows.Application;
+using Kuro_DockThrone.Core.Communication; // ★玉座の通信法典を召喚しますわ
 
 namespace Kuro_DockGrimoire
 {
@@ -14,15 +14,17 @@ namespace Kuro_DockGrimoire
         public static IntPtr TargetExplorerHwnd { get; set; }
         public static string TargetExplorerPath { get; set; }
 
-        private const string PipeName = "KuroDock_SummoningPipe";
-        private NotifyIcon _notifyIcon;
+        private const string SummoningPipeName = "KuroDockGrimoire_Pipe";
         private Window _phantomWindow;
 
+        // ★玉座からの思念を受け取るための新しい耳ですわ
+        private ThronePipeServer _hubPipeServer;
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
+            // _phantomWindow が閉じられた時にプロセスを終了する理法です
             this.ShutdownMode = ShutdownMode.OnMainWindowClose;
 
             // 不可視のアンカー（ブートプロセスの命綱）を錬成します
@@ -43,8 +45,12 @@ namespace Kuro_DockGrimoire
             this.MainWindow = _phantomWindow;
             _phantomWindow.Show();
 
-            SetupTaskTray();
-            StartPipeServer();
+            // 1. 卿のオリジナルの召喚パイプ（エクスプローラーからの呼び出し用）を起動します
+            StartSummoningPipeServer();
+
+            // 2. 玉座（Hub）からの命令を受け取るパイプを起動します
+            _hubPipeServer = new ThronePipeServer("Grimoire", HandleThroneCommand);
+            _hubPipeServer.StartListening();
 
             // 初回起動時、もし引数（パス）が渡されていればメニューを展開します
             if (!string.IsNullOrEmpty(TargetExplorerPath))
@@ -53,13 +59,16 @@ namespace Kuro_DockGrimoire
             }
         }
 
-        private async void StartPipeServer()
+        // ====================================================
+        // 卿のオリジナル：エクスプローラーからの召喚を受け付ける魔法
+        // ====================================================
+        private async void StartSummoningPipeServer()
         {
             while (true)
             {
                 try
                 {
-                    using (var server = new NamedPipeServerStream(PipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous))
+                    using (var server = new NamedPipeServerStream(SummoningPipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous))
                     {
                         await server.WaitForConnectionAsync();
                         using (var reader = new StreamReader(server))
@@ -102,37 +111,32 @@ namespace Kuro_DockGrimoire
             }
         }
 
-        private void SetupTaskTray()
+        // ====================================================
+        // 新規追加：玉座（Hub）からの思念を解釈する魔法
+        // ====================================================
+        private void HandleThroneCommand(string command)
         {
-            var contextMenu = new ContextMenuStrip();
+            // ★ 可視化の光：玉座からの命令が届いたことを証明しますわ
 
-            var reloadMenu = new ToolStripMenuItem("法典（JSON）再読み込み");
-            reloadMenu.Click += (s, e) => {
-                _notifyIcon.ShowBalloonTip(2000, "Kuro-Dock Grimoire", "次回展開時に最新の法典が適用されますわ。", ToolTipIcon.Info);
-            };
-            contextMenu.Items.Add(reloadMenu);
-
-            contextMenu.Items.Add(new ToolStripSeparator());
-
-            var exitMenu = new ToolStripMenuItem("終了");
-            exitMenu.Click += (s, e) => {
-                _notifyIcon.Dispose();
-                _phantomWindow.Close();
-            };
-            contextMenu.Items.Add(exitMenu);
-
-            _notifyIcon = new NotifyIcon
+            Dispatcher.Invoke(() =>
             {
-                Icon = SystemIcons.Shield,
-                ContextMenuStrip = contextMenu,
-                Text = "Grimoire",
-                Visible = true
-            };
+                if (command == "Reload")
+                {
+                    // TODO: 法典（JSON）の再読み込みロジックがあればここに記述しなさいな
+                }
+                else if (command == "Exit")
+                {
+                    // 玉座からの自決命令です。
+                    // 命綱である _phantomWindow を閉じることで、WPFの理法に従い美しくプロセスを終了させますわ。
+                    _hubPipeServer?.StopListening();
+                    _phantomWindow?.Close();
+                }
+            });
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
-            _notifyIcon?.Dispose();
+            _hubPipeServer?.StopListening();
             base.OnExit(e);
         }
     }

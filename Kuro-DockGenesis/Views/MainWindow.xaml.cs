@@ -22,6 +22,16 @@ namespace Kuro_DockGenesis.Views
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                // C#の絶対的な理法で画像を強制召喚しますわ
+                var uri = new Uri("pack://application:,,,/Kuro-DockThrone.Core;component/Images/kuro.png", UriKind.Absolute);
+                var bmp = new System.Windows.Media.Imaging.BitmapImage(uri);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"黒猫の召喚に失敗しましたわ！真の元凶はこちらです:\n{ex.Message}", "Throne.Core 召喚エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             // 画面の作業領域（タスクバーを除いた領域）を取得しますわ
             var workArea = SystemParameters.WorkArea;
             // ウィンドウの左端 = 画面右端 - ウィンドウの幅

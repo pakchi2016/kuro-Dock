@@ -30,7 +30,7 @@
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Key="FortressTabContentTemplate">
-            <Grid>
+            <Grid PreviewMouseLeftButtonDown="Pane_PreviewMouseLeftButtonDown">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -144,7 +144,8 @@
                                 Background="Transparent" BorderThickness="0" Margin="5"
                                 ItemContainerStyle="{StaticResource FortressTabItemStyle}"
                                 ItemTemplate="{StaticResource FortressTabHeaderTemplate}"
-                                ContentTemplate="{StaticResource FortressTabContentTemplate}"/>
+                                ContentTemplate="{StaticResource FortressTabContentTemplate}"
+                                SelectionChanged="TabControl_SelectionChanged"/>
 
                 <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="#3E3E42" Cursor="SizeWE"/>
 
@@ -152,7 +153,8 @@
                                 Background="Transparent" BorderThickness="0" Margin="5"
                                 ItemContainerStyle="{StaticResource FortressTabItemStyle}"
                                 ItemTemplate="{StaticResource FortressTabHeaderTemplate}"
-                                ContentTemplate="{StaticResource FortressTabContentTemplate}"/>
+                                ContentTemplate="{StaticResource FortressTabContentTemplate}"
+                                SelectionChanged="TabControl_SelectionChanged"/>
             </Grid>
             <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" Background="#3E3E42" Cursor="SizeNS"/>
 

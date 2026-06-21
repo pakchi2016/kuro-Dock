@@ -464,11 +464,39 @@ namespace Kuro_DockFortress.Views
             }
         }
 
-        // ★ 16. ターミナルの現在地をUIと強制同期させるメソッドですわ
+        // ★ 新設：最後に同期したパスを記憶し、無駄な連打を防ぐ防壁ですわ
+        private string _lastSyncedPath = string.Empty;
+
+        // ★ 16. ターミナルの現在地をUIと強制同期させるメソッドですわ（改修版）
         private void SyncTerminalPath(string path)
         {
-            if (string.IsNullOrEmpty(path) || path == "PC") return;
+            // PC画面や、直前と全く同じパスへの移動命令は美しく無視しますわ
+            if (string.IsNullOrEmpty(path) || path == "PC" || path == _lastSyncedPath) return;
+
+            _lastSyncedPath = path;
+            BottomTerminal.CurrentPath = path;
             BottomTerminal.ExecuteCommand($"cd \"{path}\"");
+        }
+
+        // ★ 新設：タブが切り替わった時に発動する魔術ですわ
+        private void TabControl_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            // 内部のListViewなどの選択変更イベントが誤爆して伝播するのを防ぐ絶対の結界ですわ
+            if (e.OriginalSource != sender) return;
+
+            if (sender is System.Windows.Controls.TabControl tabControl && tabControl.SelectedItem is TabItemModel tab)
+            {
+                SyncTerminalPath(tab.CurrentPath);
+            }
+        }
+
+        // ★ 新設：パネル内（空白やリスト）をクリックしてアクティブ陣営を切り替えた時の魔術ですわ
+        private void Pane_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is FrameworkElement element && element.DataContext is TabItemModel tab)
+            {
+                SyncTerminalPath(tab.CurrentPath);
+            }
         }
 
         private void SetupNotifyIcon()

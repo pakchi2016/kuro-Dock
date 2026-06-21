@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
@@ -7,23 +6,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>Kuro_DockThrone.Hub</RootNamespace>
   </PropertyGroup>
-
   <ItemGroup>
-    <None Remove="Assets\kuro.png" />
+    <Folder Include="Assets\" />
+    <Content Include="Assets\Necronomicon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.3.0" />
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.6.3" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Kuro-DockThrone.Core\Kuro-DockThrone.Core.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="Assets\kuro.png" />
-  </ItemGroup>
-
 </Project>

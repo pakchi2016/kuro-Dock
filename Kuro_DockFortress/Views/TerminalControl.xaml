@@ -18,11 +18,12 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Text="PS >" Foreground="#F39C12" FontFamily="Consolas" FontSize="14" 
+            <TextBlock x:Name="PromptText" Text="PS >" Foreground="#F39C12" FontFamily="Consolas" FontSize="14" 
                        VerticalAlignment="Center" Margin="5,0"/>
+            
             <TextBox x:Name="InputBox" Grid.Column="1" Background="Transparent" Foreground="White"
                      BorderThickness="0" FontFamily="Consolas" FontSize="14" Padding="0,5"
-                     VerticalAlignment="Center" KeyDown="InputBox_KeyDown" CaretBrush="White"/>
+                     VerticalAlignment="Center" PreviewKeyDown="InputBox_PreviewKeyDown" CaretBrush="White"/>
         </Grid>
     </Grid>
 </UserControl>

@@ -1,20 +1,30 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using Kuro_DockThrone.Core.Models;
 using Kuro_DockThrone.Core.Storage;
+using Kuro_DockThrone.Core.Helpers;
 
 namespace Kuro_DockGrimoire
 {
     public partial class MainWindow : Window
     {
-        // ★ Windows APIの召喚：現在のマウス座標を正確に取得します
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool GetCursorPos(ref Win32Point pt);
+
         private bool _isClosing = false;
+        private int _currentAnimationId = 0;
+        private int _currentSubAnimationId = 0;
+
+        public ObservableCollection<GrimoireUIBookmark> CurrentBookmarks { get; set; } = new ObservableCollection<GrimoireUIBookmark>();
+        public ObservableCollection<GrimoireUIBookmark> CurrentSubBookmarks { get; set; } = new ObservableCollection<GrimoireUIBookmark>();
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct Win32Point
@@ -26,42 +36,45 @@ namespace Kuro_DockGrimoire
         public MainWindow()
         {
             InitializeComponent();
+            BookmarksPanel.ItemsSource = CurrentBookmarks;
+            SubBookmarksPanel.ItemsSource = CurrentSubBookmarks;
             LoadBookmarks();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // 1. マウスの現在位置を取得します
             Win32Point mousePos = new Win32Point();
             GetCursorPos(ref mousePos);
 
-            // 2. その位置にウィンドウを強制転移させます
-            this.Left = mousePos.X;
+            this.Left = mousePos.X - 104;
             this.Top = mousePos.Y;
 
-            // 3. App.xaml.csで捕捉した証拠（HWNDとパス）を画面に表示して確認しますわ
-            //TextBlock_Hwnd.Text = $"HWND: {App.TargetExplorerHwnd}";
-            
-            //TextBlock_Path.Text = $"Path: {App.TargetExplorerPath}";
+            // ★ 究極の調和：画面下端までの「残りサイズ」を計算し、これ以上の膨張を許さない結界（MaxHeight）を張りますわ！
+            var workArea = SystemParameters.WorkArea;
+            double availableHeight = workArea.Bottom - this.Top - 5; // 5pxの美しい余白
+
+            if (availableHeight > 100) // 最低限の器の高さ（100px）は保証します
+            {
+                this.MaxHeight = availableHeight;
+            }
         }
 
-        // ★ メニューがクリックされた時の転移発動です
-        private void BookmarkButton_Click(object sender, RoutedEventArgs e)
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (sender is System.Windows.Controls.Button btn && btn.DataContext is BookmarkModel bookmark)
+            // 横幅の補正：ウィンドウが広がった分だけ左へ引き戻し、右端のインデックスを完全固定します
+            if (e.WidthChanged && e.PreviousSize.Width > 0)
             {
-                NavigateExplorer(bookmark.Path);
+                this.Left -= (e.NewSize.Width - e.PreviousSize.Width);
             }
+
+            // ★ 縦幅の補正（上に押し上げてUIを破壊する粗暴な魔法）は、結界によって不要となったため完全に消し去りましたわ！
         }
 
         private void LoadBookmarks()
         {
             try
             {
-                // ★ JSONの存在確認からパスの解決、解読まですべてを玉座の書記官に委ねます
                 var multiLevelData = ThroneStorage.LoadBookmarks();
-
-                // 解読された知識を魔法陣（UI）へと注ぎ込みます
                 ItemsControl_Indexes.ItemsSource = multiLevelData;
             }
             catch (Exception ex)
@@ -70,28 +83,125 @@ namespace Kuro_DockGrimoire
             }
         }
 
-        // ★ コンテキストメニューの基本：別の場所がクリックされたら即座に消滅します
-        private void Window_Deactivated(object sender, EventArgs e)
+        private async void IndexButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            SafeClose(); // 修正：this.Close() から置き換えます
+            if (sender is FrameworkElement element && element.DataContext is IndexModel indexItem)
+            {
+                int animationId = ++_currentAnimationId;
+                await Task.Delay(150);
+                if (animationId != _currentAnimationId) return;
+
+                System.Windows.Point pos = element.TranslatePoint(new System.Windows.Point(0, 0), DockPanel);
+                BookmarksPanel.Margin = new Thickness(0, pos.Y, 0, 0);
+
+                CurrentBookmarks.Clear();
+                _currentSubAnimationId++;
+                CurrentSubBookmarks.Clear();
+
+                if (indexItem.Bookmarks.Count > 0)
+                {
+                    var first = indexItem.Bookmarks[0];
+                    var firstUI = new GrimoireUIBookmark { Name = !string.IsNullOrWhiteSpace(first.Alias) ? first.Alias : Path.GetFileName(first.Path), Path = first.Path, InitialOffsetX = 50, InitialOffsetY = 0 };
+                    CurrentBookmarks.Add(firstUI);
+
+                    await Task.Delay(180);
+
+                    for (int i = 1; i < indexItem.Bookmarks.Count; i++)
+                    {
+                        if (animationId != _currentAnimationId) break;
+                        var b = indexItem.Bookmarks[i];
+                        CurrentBookmarks.Add(new GrimoireUIBookmark
+                        {
+                            Name = !string.IsNullOrWhiteSpace(b.Alias) ? b.Alias : Path.GetFileName(b.Path),
+                            Path = b.Path,
+                            InitialOffsetX = 0,
+                            InitialOffsetY = -20
+                        });
+                        await Task.Delay(30);
+                    }
+                }
+            }
+        }
+
+        private async void Bookmark_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (sender is FrameworkElement element && element.DataContext is GrimoireUIBookmark bookmark)
+            {
+                int animationId = ++_currentSubAnimationId;
+                await Task.Delay(150);
+                if (animationId != _currentSubAnimationId) return;
+
+                System.Windows.Point pos = element.TranslatePoint(new System.Windows.Point(0, 0), DockPanel);
+                SubBookmarksPanel.Margin = new Thickness(0, pos.Y, 0, 0);
+
+                CurrentSubBookmarks.Clear();
+
+                if (Directory.Exists(bookmark.Path))
+                {
+                    try
+                    {
+                        var entries = Directory.EnumerateFileSystemEntries(bookmark.Path).ToList();
+                        if (entries.Count > 0)
+                        {
+                            string firstPath = entries[0];
+                            bool isFirstFolder = Directory.Exists(firstPath);
+
+                            CurrentSubBookmarks.Add(new GrimoireUIBookmark
+                            {
+                                Name = Path.GetFileName(firstPath),
+                                Path = firstPath,
+                                InitialOffsetX = 50,
+                                InitialOffsetY = 0,
+                                Icon = IconHelper.GetIcon(firstPath, isFirstFolder)
+                            });
+
+                            await Task.Delay(180);
+
+                            for (int i = 1; i < entries.Count; i++)
+                            {
+                                if (animationId != _currentSubAnimationId) break;
+                                string path = entries[i];
+                                bool isFolder = Directory.Exists(path);
+
+                                CurrentSubBookmarks.Add(new GrimoireUIBookmark
+                                {
+                                    Name = Path.GetFileName(path),
+                                    Path = path,
+                                    InitialOffsetX = 0,
+                                    InitialOffsetY = -20,
+                                    Icon = IconHelper.GetIcon(path, isFolder)
+                                });
+
+                                await Task.Delay(30);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        private void Bookmark_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement element && element.DataContext is GrimoireUIBookmark bookmark)
+            {
+                NavigateExplorer(bookmark.Path);
+            }
         }
 
         private void NavigateExplorer(string targetPath)
         {
             if (App.TargetExplorerHwnd == IntPtr.Zero) return;
 
-            // ★ 新設：転移先が現実世界に存在するか確認する防壁ですわ
             if (!Directory.Exists(targetPath) && !File.Exists(targetPath))
             {
-                System.Windows.MessageBox.Show($"指定された座標は既にこの世界から消失していますわ。\n{targetPath}",
-                                "Kuro-Dock Grimoire - 転移失敗", MessageBoxButton.OK, MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show($"指定された座標は既にこの世界から消失していますわ。\n{targetPath}", "Kuro-Dock Grimoire", MessageBoxButton.OK, MessageBoxImage.Warning);
                 SafeClose();
                 return;
             }
 
             try
             {
-                // ★ COM参照を捨て、OSから直接「Shell.Application」を動的に召喚します
                 Type shellAppType = Type.GetTypeFromProgID("Shell.Application");
                 if (shellAppType != null)
                 {
@@ -110,26 +220,20 @@ namespace Kuro_DockGrimoire
             }
             catch (Exception ex)
             {
-                // COMオブジェクトとの通信で予期せぬエラーが起きた場合の最終防壁です
-                System.Windows.MessageBox.Show($"転移魔術の詠唱中に未知の妨害を受けましたわ:\n{ex.Message}",
-                                "Kuro-Dock Grimoire - 致命的例外", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show($"転移魔術の詠唱中に未知の妨害を受けましたわ:\n{ex.Message}", "Kuro-Dock Grimoire", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             SafeClose();
         }
 
-        // ★ 新設：テストボタンが押された時のトリガーです
-        private void TestNavigateButton_Click(object sender, RoutedEventArgs e)
-        {
-            // 仮の転移先として、問答無用で「C:\」を指定してみますわ
-            NavigateExplorer(@"C:\");
-        }
-
-        // ★ 新設：App（タスクトレイ）から呼び出される再読み込みの窓口ですわ
         public void Reload法典()
         {
-            // すでに構築済みの LoadBookmarks を再実行するだけですわね。実にかんたんです
             LoadBookmarks();
+        }
+
+        private void Window_Deactivated(object sender, EventArgs e)
+        {
+            SafeClose();
         }
 
         private void SafeClose()
@@ -140,7 +244,33 @@ namespace Kuro_DockGrimoire
                 this.Close();
             }
         }
+    }
 
+    public class GrimoireUIBookmark : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+        public string Name { get; set; }
+        public string Path { get; set; }
 
+        private double _initialOffsetX = 0;
+        public double InitialOffsetX
+        {
+            get => _initialOffsetX;
+            set { _initialOffsetX = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InitialOffsetX))); }
+        }
+
+        private double _initialOffsetY = -20;
+        public double InitialOffsetY
+        {
+            get => _initialOffsetY;
+            set { _initialOffsetY = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InitialOffsetY))); }
+        }
+
+        private System.Windows.Media.ImageSource _icon;
+        public System.Windows.Media.ImageSource Icon
+        {
+            get => _icon;
+            set { _icon = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Icon))); }
+        }
     }
 }

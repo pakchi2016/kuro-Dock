@@ -19,7 +19,7 @@ namespace Kuro_DockGenesis
             _notifyIcon.Text = "Genesis";
 
             // アプリケーション自体のアイコン（.exeのアイコン）を自動的に抽出して設定しますわ
-            _notifyIcon.Icon = Icon.ExtractAssociatedIcon(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            _notifyIcon.Icon = Icon.ExtractAssociatedIcon(Environment.ProcessPath);
             _notifyIcon.Visible = true;
 
             // 右クリックメニューの構築

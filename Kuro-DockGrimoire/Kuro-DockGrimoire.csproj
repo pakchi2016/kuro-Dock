@@ -24,4 +24,8 @@
     <Folder Include="Models\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="Images\kuro.png" />
+  </ItemGroup>
+
 </Project>
