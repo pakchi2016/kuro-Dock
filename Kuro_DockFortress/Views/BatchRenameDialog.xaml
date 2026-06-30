@@ -1,0 +1,86 @@
+﻿<Window x:Class="Kuro_DockFortress.Views.BatchRenameDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PS+ 一括正規表現リネーム (サクラエディタ準拠)" Height="550" Width="750"
+        Background="#1E1E1E" WindowStartupLocation="CenterOwner">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="TargetInfoText" Foreground="#4EC9B0" FontFamily="Meiryo" FontSize="13" Margin="0,0,0,12"/>
+
+        <Grid Grid.Row="1" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="110"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="100"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="検索条件(正規):" Foreground="#D4D4D4" VerticalAlignment="Center" FontFamily="Meiryo"/>
+            <TextBox x:Name="SearchBox" Grid.Column="1" Height="26" Background="#2D2D30" Foreground="White" 
+                     BorderThickness="1" BorderBrush="#3E3E42" FontFamily="Consolas" FontSize="14" Padding="5,2"/>
+            <Button x:Name="GenerateBtn" Content="⚡ 一括展開" Grid.Column="2" Margin="10,0,0,0" Height="26"
+                    Background="#388A34" Foreground="White" BorderThickness="0" FontWeight="Bold" Cursor="Hand" Click="GenerateBtn_Click"/>
+        </Grid>
+
+        <Grid Grid.Row="2" Margin="0,0,0,15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="110"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="置換後の名前:" Foreground="#D4D4D4" VerticalAlignment="Center" FontFamily="Meiryo"/>
+            <TextBox x:Name="ReplaceBox" Grid.Column="1" Height="26" Background="#2D2D30" Foreground="#CE9178" 
+                     BorderThickness="1" BorderBrush="#3E3E42" FontFamily="Consolas" FontSize="14" Padding="5,2"/>
+        </Grid>
+
+        <GroupBox Grid.Row="3" Header=" リアルタイム・コミット・バッファ（1ファイル 1TextBox） " Foreground="#858585" BorderBrush="#3E3E42">
+            <ListView x:Name="PreviewListView" Background="Transparent" BorderThickness="0" 
+                      ScrollViewer.HorizontalScrollBarVisibility="Disabled" 
+                      VirtualizingStackPanel.IsVirtualizing="True" 
+                      VirtualizingStackPanel.VirtualizationMode="Recycling">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Width="320">
+                            <GridViewColumnHeader Content="📄 元のファイル名 (クリックでソート)" Click="OriginalHeader_Click" Background="#2D2D30" Foreground="White" BorderThickness="0"/>
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding OriginalName}" Foreground="#9CDCFE" VerticalAlignment="Center" FontFamily="Consolas" FontSize="14" Margin="2,0"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="✏️ 変更後の名前 (個別編集可)" Width="320">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding NewName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                             Background="#2D2D30" Foreground="#CE9178" CaretBrush="White" BorderThickness="1" BorderBrush="#3E3E42"
+                                             FontFamily="Consolas" FontSize="14" Width="300" Padding="3,1" AcceptsReturn="False"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="判定" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Status}" Foreground="{Binding StatusColor}" FontWeight="Bold" VerticalAlignment="Center" FontFamily="Meiryo" FontSize="12"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </GroupBox>
+
+        <DockPanel Grid.Row="4" Margin="0,15,0,0" LastChildFill="False">
+            <TextBlock x:Name="ErrorSummaryText" Foreground="#F14C4C" VerticalAlignment="Center" DockPanel.Dock="Left" FontWeight="Bold" FontFamily="Meiryo" FontSize="13"/>
+            <Button x:Name="CancelBtn" Content="キャンセル (Esc)" Width="110" Height="30" DockPanel.Dock="Right" 
+                    Background="#3E3E42" Foreground="White" BorderThickness="0" IsCancel="True"/>
+            <Button x:Name="ExecBtn" Content="⚖️ 改名コミット" Width="140" Height="30" DockPanel.Dock="Right" Margin="0,0,10,0"
+                    Background="#0E639C" Foreground="White" BorderThickness="0" FontWeight="Bold" Click="ExecBtn_Click"/>
+        </DockPanel>
+    </Grid>
+</Window>

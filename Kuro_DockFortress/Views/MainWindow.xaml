@@ -30,7 +30,7 @@
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Key="FortressTabContentTemplate">
-            <Grid PreviewMouseLeftButtonDown="Pane_PreviewMouseLeftButtonDown">
+            <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -77,8 +77,10 @@
                             <MenuItem Header="切り取り" Click="CutItem_Click" />
                             <MenuItem Header="コピー" Click="CopyItem_Click" />
                             <MenuItem Header="貼り付け" Click="PasteItem_Click" />
+                            <MenuItem Header="✏️ 正規表現リネーム (サクラ準拠)" Click="RenameMenu_Click"/>
                             <Separator Background="#3E3E42" Foreground="#3E3E42" />
                             <MenuItem Header="削除" Click="DeleteItem_Click" />
+                            <MenuItem Header="📌 PSカレントをここへ移動" Click="MovePsCurrent_Click"/>
                         </ContextMenu>
                     </ListView.ContextMenu>
                     <ListView.ItemContainerStyle>
@@ -144,8 +146,7 @@
                                 Background="Transparent" BorderThickness="0" Margin="5"
                                 ItemContainerStyle="{StaticResource FortressTabItemStyle}"
                                 ItemTemplate="{StaticResource FortressTabHeaderTemplate}"
-                                ContentTemplate="{StaticResource FortressTabContentTemplate}"
-                                SelectionChanged="TabControl_SelectionChanged"/>
+                                ContentTemplate="{StaticResource FortressTabContentTemplate}"/>
 
                 <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="#3E3E42" Cursor="SizeWE"/>
 
@@ -153,8 +154,7 @@
                                 Background="Transparent" BorderThickness="0" Margin="5"
                                 ItemContainerStyle="{StaticResource FortressTabItemStyle}"
                                 ItemTemplate="{StaticResource FortressTabHeaderTemplate}"
-                                ContentTemplate="{StaticResource FortressTabContentTemplate}"
-                                SelectionChanged="TabControl_SelectionChanged"/>
+                                ContentTemplate="{StaticResource FortressTabContentTemplate}"/>
             </Grid>
             <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" Background="#3E3E42" Cursor="SizeNS"/>
 

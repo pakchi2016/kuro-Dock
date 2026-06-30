@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace Kuro_DockFortress.Views
@@ -19,6 +20,10 @@ namespace Kuro_DockFortress.Views
             this.DataContext = new MainViewModel(); // 紐付けの儀式ですわ
 
             SetupNotifyIcon();
+            BottomTerminal.OnPathChangedFromTerminal = (path) =>
+            {
+                _lastSyncedPath = path.TrimEnd('\\');
+            };
         }
 
         // ★ 1. リストの項目をダブルクリックした時の処理ですわ
@@ -33,7 +38,6 @@ namespace Kuro_DockFortress.Views
                     if (listView.DataContext is TabItemModel tab)
                     {
                         tab.CurrentPath = file.Path;
-                        SyncTerminalPath(tab.CurrentPath);
                     }
                 }
                 else
@@ -467,38 +471,6 @@ namespace Kuro_DockFortress.Views
         // ★ 新設：最後に同期したパスを記憶し、無駄な連打を防ぐ防壁ですわ
         private string _lastSyncedPath = string.Empty;
 
-        // ★ 16. ターミナルの現在地をUIと強制同期させるメソッドですわ（改修版）
-        private void SyncTerminalPath(string path)
-        {
-            // PC画面や、直前と全く同じパスへの移動命令は美しく無視しますわ
-            if (string.IsNullOrEmpty(path) || path == "PC" || path == _lastSyncedPath) return;
-
-            _lastSyncedPath = path;
-            BottomTerminal.CurrentPath = path;
-            BottomTerminal.ExecuteCommand($"cd \"{path}\"");
-        }
-
-        // ★ 新設：タブが切り替わった時に発動する魔術ですわ
-        private void TabControl_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            // 内部のListViewなどの選択変更イベントが誤爆して伝播するのを防ぐ絶対の結界ですわ
-            if (e.OriginalSource != sender) return;
-
-            if (sender is System.Windows.Controls.TabControl tabControl && tabControl.SelectedItem is TabItemModel tab)
-            {
-                SyncTerminalPath(tab.CurrentPath);
-            }
-        }
-
-        // ★ 新設：パネル内（空白やリスト）をクリックしてアクティブ陣営を切り替えた時の魔術ですわ
-        private void Pane_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (sender is FrameworkElement element && element.DataContext is TabItemModel tab)
-            {
-                SyncTerminalPath(tab.CurrentPath);
-            }
-        }
-
         private void SetupNotifyIcon()
         {
             _notifyIcon = new System.Windows.Forms.NotifyIcon();
@@ -551,6 +523,147 @@ namespace Kuro_DockFortress.Views
                 e.Cancel = true; // 終了処理をキャンセル（無効化）します
                 this.Hide();     // 姿を消しますわ
             }
+        }
+
+        private void MovePsCurrent_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.MenuItem menuItem)
+            {
+                // ★ WPFの絶対鉄則：ContextMenuの大元である「PlacementTarget（右クリックされたUI要素）」を逆登りますわ！
+                var contextMenu = menuItem.Parent as System.Windows.Controls.ContextMenu;
+                if (contextMenu?.PlacementTarget is FrameworkElement target && target.DataContext is TabItemModel tab)
+                {
+                    BottomTerminal.ChangeDirectory(tab.CurrentPath);
+                }
+            }
+        }
+        // MainWindow.xaml.cs 内に追記しなさいな
+
+        private void RenameMenu_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.MenuItem menuItem &&
+                menuItem.Parent is System.Windows.Controls.ContextMenu contextMenu)
+            {
+                // ★ 魔法1：右クリックされた位置が「余白」であれ「ファイル行の文字の上」であれ、大元のListBoxを100%補獲しますわ
+                var filerListBox = FindAncestor<System.Windows.Controls.ListBox>(contextMenu.PlacementTarget);
+                if (filerListBox?.DataContext is TabItemModel tab) // ←卿の既存ViewModel型
+                {
+                    string currentDir = tab.CurrentPath;
+                    var targetFullPaths = new List<string>();
+
+                    // 選択中のアイテム群から絶対パスを抽出します
+                    foreach (var selectedItem in filerListBox.SelectedItems)
+                    {
+                        string fileName = ExtractFileNameFromModel(selectedItem);
+                        if (!string.IsNullOrWhiteSpace(fileName))
+                        {
+                            targetFullPaths.Add(Path.Combine(currentDir, fileName));
+                        }
+                    }
+
+                    // ====================================================================
+                    // 仕様1：合意確認済みの「3相ルーティング法典」
+                    // ====================================================================
+
+                    if (targetFullPaths.Count == 0)
+                    {
+                        // 【ルートC：選択肢ゼロ】 ⇒ フォルダ直下の「全ファイル」を一括対象に！
+                        targetFullPaths = Directory.GetFiles(currentDir).ToList();
+                        if (targetFullPaths.Count == 0)
+                        {
+                            System.Windows.MessageBox.Show("この座標にはリネームすべきファイルが1件も存在しませんわ。", "要塞警報", MessageBoxButton.OK, MessageBoxImage.Information);
+                            return;
+                        }
+
+                        var dlg = new BatchRenameDialog(targetFullPaths) { Owner = Window.GetWindow(this) };
+                        if (dlg.ShowDialog() == true) tab.RefreshDirectory(); // ※お手持ちの画面再読込メソッド名へ合わせてちょうだい
+                    }
+                    else if (targetFullPaths.Count == 1)
+                    {
+                        // 【ルートA：選択肢1個】 ⇒ 5つ目のxamlを作らせない即席・単体リネーム小窓
+                        string srcPath = targetFullPaths[0];
+                        string oldName = Path.GetFileName(srcPath);
+
+                        string newName = ShowSingleInputBox("単体リネーム", "新しいファイル名を入力しなさいな:", oldName);
+                        if (!string.IsNullOrWhiteSpace(newName) && newName != oldName)
+                        {
+                            try
+                            {
+                                File.Move(srcPath, Path.Combine(currentDir, newName));
+                                tab.RefreshDirectory();
+                            }
+                            catch (Exception ex) { System.Windows.MessageBox.Show($"単体改名に失敗しましたわ:\n{ex.Message}", "執行エラー", MessageBoxButton.OK, MessageBoxImage.Error); }
+                        }
+                    }
+                    else
+                    {
+                        // 【ルートB：選択肢N個】 ⇒ 「選択したN個だけ」を対象に最強一括ダイアログ起動！
+                        var dlg = new BatchRenameDialog(targetFullPaths) { Owner = Window.GetWindow(this) };
+                        if (dlg.ShowDialog() == true) tab.RefreshDirectory();
+                    }
+                }
+            }
+        }
+
+        // ====================================================================
+        // 黒魔術ヘルパーA：未知のViewModelからファイル名を強引に抜き取るリフレクション探査機
+        // ====================================================================
+        private string ExtractFileNameFromModel(object model)
+        {
+            if (model == null) return "";
+            if (model is string s) return Path.GetFileName(s);
+
+            var type = model.GetType();
+            foreach (var propName in new[] { "FullPath", "Path", "FullName", "FileName", "Name" })
+            {
+                var prop = type.GetProperty(propName);
+                if (prop != null)
+                {
+                    string val = prop.GetValue(model)?.ToString();
+                    if (!string.IsNullOrEmpty(val)) return Path.GetFileName(val);
+                }
+            }
+            return model.ToString();
+        }
+
+        // 黒魔術ヘルパーB：WPFビジュアルツリーを上空へ突き抜ける先祖探索術
+        private T FindAncestor<T>(DependencyObject current) where T : DependencyObject
+        {
+            while (current != null)
+            {
+                if (current is T target) return target;
+                current = System.Windows.Media.VisualTreeHelper.GetParent(current);
+            }
+            return null;
+        }
+
+        // 黒魔術ヘルパーC：コードだけで受肉するスタイリッシュ単体入力小窓
+        private string ShowSingleInputBox(string title, string prompt, string defaultText)
+        {
+            var win = new Window { Width = 450, Height = 180, Title = title, WindowStartupLocation = WindowStartupLocation.CenterOwner, ResizeMode = ResizeMode.NoResize, Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(30, 30, 30)) };
+            var grid = new Grid { Margin = new Thickness(15) };
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+            var lbl = new System.Windows.Controls.TextBlock { Text = prompt, Foreground = System.Windows.Media.Brushes.White, FontFamily = new System.Windows.Media.FontFamily("Meiryo"), Margin = new Thickness(0, 0, 0, 8) };
+            // ★修正1：Padding を 4引数 (5, 3, 5, 3) に変更しましたわ
+            var txt = new System.Windows.Controls.TextBox { Text = defaultText, Height = 28, Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48)), Foreground = System.Windows.Media.Brushes.White, CaretBrush = System.Windows.Media.Brushes.White, BorderThickness = new Thickness(1), BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(62, 62, 66)), FontFamily = new System.Windows.Media.FontFamily("Consolas"), FontSize = 14, Padding = new Thickness(5, 3, 5, 3) };
+
+            // ★修正2：HorizontalAlignment を System.Windows.HorizontalAlignment.Right に変更しましたわ
+            var btnPanel = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right, Margin = new Thickness(0, 18, 0, 0) };
+            var okBtn = new System.Windows.Controls.Button { Content = "⚖️ 改名執行", Width = 100, Height = 28, IsDefault = true, Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(14, 99, 156)), Foreground = System.Windows.Media.Brushes.White, BorderThickness = new Thickness(0), FontWeight = FontWeights.Bold };
+            var cancelBtn = new System.Windows.Controls.Button { Content = "取消", Width = 80, Height = 28, IsCancel = true, Margin = new Thickness(8, 0, 0, 0), Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(62, 62, 66)), Foreground = System.Windows.Media.Brushes.White, BorderThickness = new Thickness(0) };
+
+            string result = null;
+            okBtn.Click += (s, e) => { result = txt.Text; win.DialogResult = true; };
+            btnPanel.Children.Add(okBtn); btnPanel.Children.Add(cancelBtn);
+            grid.Children.Add(lbl); grid.Children.Add(txt); grid.Children.Add(btnPanel);
+            Grid.SetRow(txt, 1); Grid.SetRow(btnPanel, 2);
+            win.Content = grid; win.Owner = Window.GetWindow(this);
+
+            win.Loaded += (s, e) => { txt.Focus(); txt.SelectAll(); };
+            return win.ShowDialog() == true ? result : null;
         }
     }
 }

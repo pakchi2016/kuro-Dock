@@ -41,7 +41,7 @@ namespace Kuro_DockFortress.Models
             }
         }
         // ディレクトリの中身を美しくリストへ展開する処理です
-        private void LoadDirectory(string path)
+        public void LoadDirectory(string path)
         {
             Files.Clear();
 
@@ -119,6 +119,12 @@ namespace Kuro_DockFortress.Models
             {
                 // アクセス権限がないシステムフォルダ等でエラーが出た場合は握り潰しますわ
             }
+        }
+
+        // ★ 新設：外の世界（MainWindow等）から安全に再読み込みを命じるための公開窓口ですわ
+        public void RefreshDirectory()
+        {
+            LoadDirectory(this.CurrentPath);
         }
 
         protected void OnPropertyChanged(string propertyName)
